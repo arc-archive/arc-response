@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, minimum-scale=1, initial-scale=1, user-scalable=yes">
+  <title>Timings demo</title>
+  <style>
+  .centered[role="main"] {
+    max-width: 1400px;
+  }
+
+  body.styled {
+    --arc-font-code-family: 'Roboto Mono', 'Consolas', 'Menlo', monospace;
+  }
+
+  body.styled.dark {
+    --primary-background-color: #373737;
+  }
+
+  body.styled.dark request-timings,
+  body.styled.dark request-timings-panel {
+    background-color: #373737;
+    color: #fff;
+  }
+  </style>
+</head>
+
+<body>
+  <div id="demo"></div>
+  <script type="module" src="timings.js"></script>
+</body>
+
+</html>

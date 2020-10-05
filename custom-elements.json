@@ -1,0 +1,73 @@
+{
+  "version": "experimental",
+  "tags": [
+    {
+      "name": "request-timings-panel",
+      "path": "./request-timings-panel.js",
+      "description": "An element to render a set of ARC HAR timings.",
+      "attributes": [
+        {
+          "name": "narrow",
+          "description": "When set it renders mobile friendly view",
+          "type": "boolean"
+        }
+      ],
+      "properties": [
+        {
+          "name": "styles",
+          "type": "CSSResult"
+        },
+        {
+          "name": "redirects",
+          "description": "An array of HAR 1.2 timings object.\nIt describes a timings for any redirect occurrence during the request.\nThe list should should be ordered by the occurrence time.",
+          "type": "RequestTimings[]"
+        },
+        {
+          "name": "timings",
+          "description": "The main request HAR timings.",
+          "type": "RequestTimings"
+        },
+        {
+          "name": "narrow",
+          "attribute": "narrow",
+          "description": "When set it renders mobile friendly view",
+          "type": "boolean"
+        },
+        {
+          "name": "hasRedirects",
+          "description": "Tests whether redirects list has been set",
+          "type": "boolean"
+        }
+      ]
+    },
+    {
+      "name": "request-timings",
+      "path": "./request-timings.js",
+      "description": "An element to render request timings data according to the HAR 1.2 spec.",
+      "attributes": [
+        {
+          "name": "narrow",
+          "description": "When set it renders mobile friendly view",
+          "type": "boolean"
+        }
+      ],
+      "properties": [
+        {
+          "name": "styles",
+          "type": "CSSResult"
+        },
+        {
+          "name": "timings",
+          "description": "A timings object as described in HAR 1.2 spec.",
+          "type": "RequestTimings"
+        },
+        {
+          "name": "narrow",
+          "attribute": "narrow",
+          "description": "When set it renders mobile friendly view",
+          "type": "boolean"
+        }
+      ]
+    }
+  ]
+}
