@@ -17,7 +17,8 @@ import elementStyles from './styles/RequestTimingsPanel.styles.js';
 import '../request-timings.js';
 import { readTimingValue, computeHarTime, computeRequestTime, redirectsTableTemplate, timingsTemplate, timingItemTemplate } from './internals.js';
 
-/** @typedef {import('@advanced-rest-client/arc-types').ArcResponse.RequestTimings} RequestTimings */
+/** @typedef {import('@advanced-rest-client/arc-types').ArcResponse.RequestTime} RequestTime */
+/** @typedef {import('@advanced-rest-client/arc-types').ArcResponse.ResponseRedirect} ResponseRedirect */
 /** @typedef {import('lit-element').TemplateResult} TemplateResult */
 
 /**
@@ -31,9 +32,7 @@ export class RequestTimingsPanelElement extends LitElement {
   static get properties() {
     return {
       /**
-       * An array of HAR 1.2 timings object.
-       * It describes a timings for any redirect occurrence during the request.
-       * The list should should be ordered by the occurrence time.
+       * The ARC's `ResponseRedirect` object
        */
       redirects: { type: Array },
       /** 
@@ -43,7 +42,11 @@ export class RequestTimingsPanelElement extends LitElement {
       /**
        * When set it renders mobile friendly view
        */
-      narrow: { type: Boolean, reflect: true }
+      narrow: { type: Boolean, reflect: true },
+      /** 
+       * The request general start time
+       */
+      startTime: { type: Number }
     };
   }
 
@@ -57,20 +60,21 @@ export class RequestTimingsPanelElement extends LitElement {
 
   constructor() {
     super();
-    this.redirects = /** @type RequestTimings[] */ (undefined);
-    this.timings = /** @type RequestTimings */ (undefined);
+    this.redirects = /** @type ResponseRedirect[] */ (undefined);
+    this.timings = /** @type RequestTime */ (undefined);
     this.narrow = false;
+    this.startTime = /** @type number */ (undefined);
   }
 
   /**
-   * @param {RequestTimings[]} redirects The timings of the redirects
-   * @param {RequestTimings} timings The timings of the final request
+   * @param {ResponseRedirect[]} redirects The timings of the redirects
+   * @param {RequestTime} timings The timings of the final request
    * @returns {number} The total request time
    */
   [computeRequestTime](redirects, timings) {
     let time = 0;
     if (Array.isArray(redirects)) {
-      redirects.forEach((timing) => { time += this[computeHarTime](timing); });
+      redirects.forEach((redirect) => { time += this[computeHarTime](redirect.timings); });
     }
     const add = this[computeHarTime](timings);
     if (add) {
@@ -95,7 +99,7 @@ export class RequestTimingsPanelElement extends LitElement {
   }
 
   /**
-   * @param {RequestTimings} har The timings object
+   * @param {RequestTime} har The timings object
    * @returns {number} The total request time
    */
   [computeHarTime](har) {
@@ -135,11 +139,11 @@ export class RequestTimingsPanelElement extends LitElement {
     return html`
     <section class="redirects">
       <h3 class="sub-title">Redirects</h3>
-      ${redirects.map((item, index) => this[timingItemTemplate](item, index))}
+      ${redirects.map((item, index) => this[timingItemTemplate](item.timings, item.startTime, index))}
       <h3 class="sub-title">Final request</h3>
       <div class="timings-row">
         <div class="redirect-value">
-          <request-timings .timings="${timings}" ?narrow="${narrow}"></request-timings>
+          <request-timings .timings="${timings}" .startTime="${this.startTime}" ?narrow="${narrow}"></request-timings>
         </div>
       </div>
       <div class="status-row">
@@ -151,17 +155,18 @@ export class RequestTimingsPanelElement extends LitElement {
   }
 
   /**
-   * @param {RequestTimings} item A redirect timings
+   * @param {RequestTime} item A redirect timings
+   * @param {number} startTime The request start timestamp
    * @param {number} index The index in the redirects array
    * @returns {TemplateResult} A template for a single table
    */
-  [timingItemTemplate](item, index) {
+  [timingItemTemplate](item, startTime, index) {
     const { narrow } = this;
     return html`
     <div class="timings-row">
       <div class="status-label text">#<span>${index + 1}</span></div>
       <div class="redirect-value">
-        <request-timings .timings="${item}" ?narrow="${narrow}"></request-timings>
+        <request-timings .timings="${item}" .startTime="${startTime}" ?narrow="${narrow}"></request-timings>
       </div>
     </div>
     `;

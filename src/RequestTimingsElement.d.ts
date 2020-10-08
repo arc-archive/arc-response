@@ -12,7 +12,6 @@ import {
   blockedTime,
   dnsTime,
   sslTime,
-  startTime,
   timingRowTemplate,
   roundTime,
   startTimeTemplate,
@@ -28,8 +27,8 @@ export class RequestTimingsElement extends LitElement {
   /**
    * A timings object as described in HAR 1.2 spec.
    */
-  timings: ArcResponse.RequestTimings;
-  [timingsValue]: ArcResponse.RequestTimings;
+  timings: ArcResponse.RequestTime;
+  [timingsValue]: ArcResponse.RequestTime;
   [requestTime]: number;
   [connectTime]: number;
   [receiveTime]: number;
@@ -38,13 +37,19 @@ export class RequestTimingsElement extends LitElement {
   [blockedTime]: number;
   [dnsTime]: number;
   [sslTime]: number;
-  [startTime]: number;
 
   /**
    * When set it renders mobile friendly view
    * @attribute
    */
   narrow: boolean;
+  /** 
+   * The request start time
+   * @attribute
+   */
+  startTime?: number;
+
+  constructor();
 
   /**
    * Reads the timing value and normalizes it to a positive integer.
@@ -57,7 +62,7 @@ export class RequestTimingsElement extends LitElement {
   /**
    * Updates the view after `timings` change.
    */
-  [computeTimings](timings: ArcResponse.RequestTimings): void;
+  [computeTimings](timings: ArcResponse.RequestTime): void;
   
   /**
    * Round numeric value to precision defined in the `power` argument.

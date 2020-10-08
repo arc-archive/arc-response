@@ -117,7 +117,7 @@ class ComponentPage extends DemoPage {
 
   contentTemplate() {
     return html`
-      <h2>ARC headers editor</h2>
+      <h2>ARC request timings view</h2>
       ${this._demoTemplate()}
       ${this._panelTemplate()}
     `;

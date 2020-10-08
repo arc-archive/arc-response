@@ -96,7 +96,6 @@ describe('RequestTimingsElement', () => {
     beforeEach(async () => {
       element = await basicFixture();
       timings = {
-        startTime: 1483368432132,
         blocked: 7.751456734,
         dns: 279.3812349,
         connect: 883.1201243,
@@ -115,10 +114,10 @@ describe('RequestTimingsElement', () => {
     it('computes values when no timings', () => {
       element[computeTimings](undefined);
       assert.equal(element[requestTime], 0, 'fulltime is 0');
-      assert.equal(element[connectTime], 0, 'connect is 0');
-      assert.equal(element[receiveTime], 0, 'receive is 0');
-      assert.equal(element[sendTime], 0, 'send is 0');
-      assert.equal(element[waitTime], 0, 'wait is 0');
+      assert.isUndefined(element[connectTime], 'connect is 0');
+      assert.isUndefined(element[receiveTime], 'receive is 0');
+      assert.isUndefined(element[sendTime], 'send is 0');
+      assert.isUndefined(element[waitTime], 'wait is 0');
       assert.isUndefined(element[dnsTime], 'dns is undefined');
       assert.isUndefined(element[blockedTime], 'blocked is undefined');
       assert.isUndefined(element[sslTime], 'ssl is undefined');
@@ -161,7 +160,6 @@ describe('RequestTimingsElement', () => {
     beforeEach(async () => {
       element = await basicFixture();
       element.timings = {
-        startTime: 1483368432132,
         blocked: 7.751456734,
         dns: 279.3812349,
         connect: 883.1201243,
@@ -219,7 +217,6 @@ describe('RequestTimingsElement', () => {
     beforeEach(async () => {
       element = await basicFixture();
       element.timings = {
-        startTime: 1483368432132,
         blocked: 7.751456734,
         dns: 279.3812349,
         connect: 883.1201243,

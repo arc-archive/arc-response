@@ -28,14 +28,13 @@ import {
   blockedTime,
   dnsTime,
   sslTime,
-  startTime,
   timingRowTemplate,
   roundTime,
   startTimeTemplate,
   computeSum,
 } from './internals.js';
 
-/** @typedef {import('@advanced-rest-client/arc-types').ArcResponse.RequestTimings} RequestTimings */
+/** @typedef {import('@advanced-rest-client/arc-types').ArcResponse.RequestTime} RequestTime */
 /** @typedef {import('lit-element').TemplateResult} TemplateResult */
 
 /**
@@ -55,7 +54,11 @@ export class RequestTimingsElement extends LitElement {
       /**
        * When set it renders mobile friendly view
        */
-      narrow: { type: Boolean, reflect: true }
+      narrow: { type: Boolean, reflect: true },
+      /** 
+       * The request start time
+       */
+      startTime: { type: Number },
     };
   }
 
@@ -70,6 +73,13 @@ export class RequestTimingsElement extends LitElement {
     }
     this[timingsValue] = value;
     this[computeTimings](value);
+  }
+
+  constructor() {
+    super();
+    this.startTime = /** @type number */(undefined);
+    this.timings = /** @type RequestTime */(undefined);
+    this.narrow = false;
   }
 
   /**
@@ -96,29 +106,30 @@ export class RequestTimingsElement extends LitElement {
 
   /**
    * Updates the view after `timings` change.
-   * @param {RequestTimings} timings
+   * @param {RequestTime} timings
    */
-  [computeTimings](timings={}) {
+  [computeTimings](timings) {
     let fullTime = 0;
-    this[connectTime] = this[readTimingValue](timings.connect, true);
-    this[receiveTime] = this[readTimingValue](timings.receive, true);
-    this[sendTime] = this[readTimingValue](timings.send, true);
-    this[waitTime] = this[readTimingValue](timings.wait, true);
-    this[blockedTime] = this[readTimingValue](timings.blocked);
-    this[dnsTime] = this[readTimingValue](timings.dns);
-    this[sslTime] = this[readTimingValue](timings.ssl);
-    fullTime += this[connectTime] + this[receiveTime] + this[sendTime] + this[waitTime];
-    if (this[dnsTime] > 0) {
-      fullTime += this[dnsTime];
-    }
-    if (this[blockedTime] > 0) {
-      fullTime += this[blockedTime];
-    }
-    if (this[sslTime] > 0) {
-      fullTime += this[sslTime];
+    if (timings) {
+      this[connectTime] = this[readTimingValue](timings.connect, true);
+      this[receiveTime] = this[readTimingValue](timings.receive, true);
+      this[sendTime] = this[readTimingValue](timings.send, true);
+      this[waitTime] = this[readTimingValue](timings.wait, true);
+      this[blockedTime] = this[readTimingValue](timings.blocked);
+      this[dnsTime] = this[readTimingValue](timings.dns);
+      this[sslTime] = this[readTimingValue](timings.ssl);
+      fullTime += this[connectTime] + this[receiveTime] + this[sendTime] + this[waitTime];
+      if (this[dnsTime] > 0) {
+        fullTime += this[dnsTime];
+      }
+      if (this[blockedTime] > 0) {
+        fullTime += this[blockedTime];
+      }
+      if (this[sslTime] > 0) {
+        fullTime += this[sslTime];
+      }
     }
     this[requestTime] = fullTime;
-    this[startTime] = this[readTimingValue](timings.startTime);
     this.requestUpdate();
   }
   
@@ -220,7 +231,7 @@ export class RequestTimingsElement extends LitElement {
     const blocked = this[blockedTime];
     const dns = this[dnsTime];
     const ssl = this[sslTime];
-    const time = this[startTime];
+    const time = this.startTime;
 
     const blockedProgressValue = this[computeSum](blocked);
     const ttcProgressValue = this[computeSum](blocked, dns);

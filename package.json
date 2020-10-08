@@ -1,7 +1,7 @@
 {
   "name": "@advanced-rest-client/arc-response",
   "description": "A module containing the UI regions and the logic to render and support HTTP response in Advanced REST Client.",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "license": "Apache-2.0",
   "main": "index.js",
   "module": "index.js",
@@ -28,14 +28,23 @@
     "email": "arc@mulesoft.com"
   },
   "dependencies": {
-    "@advanced-rest-client/arc-types": "^0.1.10",
+    "@advanced-rest-client/arc-events": "^0.2.0",
+    "@advanced-rest-client/arc-headers": "^0.1.2",
+    "@advanced-rest-client/arc-icons": "^3.1.2",
+    "@advanced-rest-client/arc-types": "^0.2.5",
     "@advanced-rest-client/date-time": "^3.0.2",
+    "@advanced-rest-client/prism-highlight": "^4.0.2",
+    "@anypoint-web-components/anypoint-button": "^1.0.15",
+    "@anypoint-web-components/anypoint-item": "^1.0.5",
+    "@anypoint-web-components/anypoint-listbox": "^1.0.4",
+    "@anypoint-web-components/anypoint-menu-button": "^0.1.0",
     "@polymer/paper-progress": "^3.0.0",
     "lit-element": "^2.4.0",
-    "lit-html": "^1.3.0"
+    "lit-html": "^1.3.0",
+    "prismjs": "^1.21.0"
   },
   "devDependencies": {
-    "@advanced-rest-client/arc-data-generator": "^3.1.9",
+    "@advanced-rest-client/arc-data-generator": "^3.1.10",
     "@advanced-rest-client/arc-demo-helper": "^2.2.0",
     "@advanced-rest-client/testing-karma-sl": "^1.4.2",
     "@anypoint-web-components/anypoint-switch": "^0.1.4",
@@ -48,7 +57,7 @@
     "eslint-config-prettier": "^6.12.0",
     "husky": "^4.3.0",
     "lint-staged": "^10.4.0",
-    "sinon": "^9.1.0",
+    "sinon": "^9.2.0",
     "typescript": "^4.0.3",
     "typescript-lit-html-plugin": "^0.9.0"
   },
