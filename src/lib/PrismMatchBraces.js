@@ -80,6 +80,16 @@ function clickBrace() {
   });
 }
 
+/**
+ * Global exports
+ */
+// @ts-ignore
+Prism.plugins.matchBraces = {
+  resetIndex: () => {
+    pairIdCounter = 0;
+  }
+};
+
 // @ts-ignore
 Prism.hooks.add('complete', (env) => {
   /** @type {HTMLElement} */
@@ -187,5 +197,6 @@ Prism.hooks.add('complete', (env) => {
       brace.element.className += ' brace-level-' + (level % LEVEL_WARP + 1);
     }
   });
+  // @ts-ignore
   Prism.hooks.run('brace-complete', env);
 });

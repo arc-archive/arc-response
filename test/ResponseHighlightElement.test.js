@@ -56,32 +56,38 @@ describe('ResponseHighlightElement', () => {
   });
 
   describe('Parsing', () => {
+    beforeEach(() => {
+      // @ts-ignore
+      Prism.plugins.matchBraces.resetIndex();
+    });
+    
     it('Parses XML', async () => {
       const element = await xmlFixture();
       const code = '<Person>true</Person>';
       element.code = code;
       await aTimeout(0);
-      const out = element[outputElement];
-      const result = out.innerHTML.trim();
-      let compare = '<span class="token tag"><span class="token tag">';
+      let compare = '<code class="language-"  id="output">';
+      compare += '<span class="token tag"><span class="token tag">';
       compare += '<span class="token punctuation">&lt;</span>Person</span>';
       compare += '<span class="token punctuation">&gt;</span></span>true';
       compare += '<span class="token tag"><span class="token tag">';
       compare += '<span class="token punctuation">&lt;/</span>';
       compare += 'Person</span><span class="token punctuation">&gt;</span></span>';
-      assert.equal(result, compare);
+      compare += '</code>';
+      assert.dom.equal(element[outputElement], compare, { ignoreAttributes: ['aria-label'] });
     });
 
     it('renders predefined json', async () => {
       const element = await fullFixture();
       await aTimeout(0);
-      const result = element[outputElement].innerHTML.trim();
-      const c =
+      const compare =
+        '<code class="language- toggle-padding" id="output">' + 
         '<span class="toggle-target opened" title="Toggle visibility" aria-label="Activate to toggle visibility of the lines"></span>' + 
-        '<span class="token punctuation brace-curly brace-open brace-level-1" id="pair-2-close" data-open="pair-2-open">{</span>' + 
+        '<span class="token punctuation brace-curly brace-open brace-level-1" id="pair-0-close" data-open="pair-0-open">{</span>' + 
         '<span class="token property">"test"</span><span class="token operator">:</span> <span class="token boolean">true</span>' + 
-        '<span class="token punctuation brace-curly brace-close brace-level-1" id="pair-2-open" data-close="pair-2-close">}</span>';
-      assert.equal(result, c);
+        '<span class="token punctuation brace-curly brace-close brace-level-1" id="pair-0-open" data-close="pair-0-close">}</span>' +
+        '</code>';
+      assert.dom.equal(element[outputElement], compare, { ignoreAttributes: ['aria-label'] });
     });
   });
 
