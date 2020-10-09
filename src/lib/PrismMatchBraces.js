@@ -84,6 +84,9 @@ function clickBrace() {
 Prism.hooks.add('complete', (env) => {
   /** @type {HTMLElement} */
   const code = env.element;
+  if (!code) {
+    return;
+  }
   const pre = code.parentElement;
 
   if (!pre || pre.tagName !== 'PRE') {

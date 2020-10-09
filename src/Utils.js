@@ -20,10 +20,9 @@ export function bytesToSize(bytes, decimals = 2) {
 
 /**
  * @param {string|Buffer|ArrayBuffer} body The body 
- * @param {string} charset Response character encoding
  * @returns {string}
  */
-export function readBodyString(body, charset='utf-8') {
+export function readBodyString(body) {
   const type = typeof body;
   if (['string', 'boolean', 'undefined'].includes(type)) {
     return /** @type string */ (body);
@@ -35,7 +34,7 @@ export function readBodyString(body, charset='utf-8') {
     // @ts-ignore
     typed = new Uint8Array(typed.data);
   }
-  const decoder = new TextDecoder(charset);
+  const decoder = new TextDecoder();
   try {
     return decoder.decode(typed);
   } catch (e) {
@@ -49,7 +48,7 @@ export function readBodyString(body, charset='utf-8') {
  * @return {string|undefined}
  */
 export function computeCharset(contentType) {
-  if (!contentType || !contentType.split) {
+  if (!contentType || typeof contentType !== 'string') {
     return undefined;
   }
   if (contentType.indexOf('charset') === -1) {
@@ -69,8 +68,8 @@ export function computeCharset(contentType) {
 /**
  * Reads content-type header from the response headers.
  *
- * @param {?String} headers Headers received from the server
- * @return {Array<String>} When present an array where first item is
+ * @param {string} headers Headers received from the server
+ * @return {string[]} When present an array where first item is
  * the content type and second is charset value. Otherwise empty array.
  */
 export function readContentType(headers) {

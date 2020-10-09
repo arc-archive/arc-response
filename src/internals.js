@@ -50,6 +50,7 @@ export const contentActionHandler = Symbol('contentActionHandler');
 export const saveResponseFile = Symbol('saveResponseFile');
 export const copyResponseClipboard = Symbol('copyResponseClipboard');
 export const redirectLinkHandler = Symbol('redirectLinkHandler');
+export const tabsKeyDownHandler = Symbol('tabsKeyDownHandler');
 
 export const bodyValue = Symbol('bodyValue');
 export const contentTypeValue = Symbol('contentTypeValue');
@@ -84,3 +85,7 @@ export const redirectItemTemplate = Symbol('redirectItemTemplate');
 export const computeRedirectLocation = Symbol('computeRedirectLocation');
 export const pendingViewUpdate = Symbol('pendingViewUpdate');
 export const activeValue = Symbol('activeValue');
+
+export const pageTemplate = Symbol('pageTemplate');
+export const messageChanged = Symbol('messageChanged');
+export const messageValue = Symbol('messageValue');

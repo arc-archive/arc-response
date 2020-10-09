@@ -28,6 +28,7 @@ import { bytesToSize, readContentType, readBodyString } from './Utils.js';
 import { MimeTypes } from './lib/MimeTypes.js';
 import '../request-timings-panel.js';
 import '../response-body.js';
+import '../response-error.js';
 import {
   emptyResponseScreenTemplate,
   responseTabsTemplate,
@@ -63,6 +64,7 @@ import {
   saveResponseFile,
   copyResponseClipboard,
   redirectLinkHandler,
+  tabsKeyDownHandler,
 } from './internals.js';
 
 /** @typedef {import('lit-element').TemplateResult} TemplateResult */
@@ -73,7 +75,11 @@ import {
 /** @typedef {import('@advanced-rest-client/arc-types').ArcResponse.RequestsSize} RequestsSize */
 /** @typedef {import('@advanced-rest-client/arc-types').ArcRequest.TransportRequest} TransportRequest */
 /** @typedef {import('@advanced-rest-client/arc-types').ArcResponse.ResponseRedirect} ResponseRedirect */
+/** @typedef {import('./ResponseViewElement').ResponsePanel} ResponsePanel */
 
+/** 
+ * @type {ResponsePanel[]}
+ */
 export const availableTabs = [
   {
     id: 'response',
@@ -121,6 +127,10 @@ export class ResponseViewElement extends LitElement {
        * @attribute
        */
       selected: { type: String },
+      /**
+       * Adds a compatibility with Anypoint styling
+       */
+      compatibility: { type: Boolean },
     };
   }
 
@@ -144,7 +154,7 @@ export class ResponseViewElement extends LitElement {
    */
   set active(value) {
     const old = this[openedTabs];
-    if (old === value || !Array.isArray(value)) {
+    if (old === value || !Array.isArray(value) && value !== null && value !== undefined) {
       return;
     }
     this[openedTabs] = (value || []).filter((item) => availableTabs.some((tab) => tab.id === item));
@@ -183,6 +193,8 @@ export class ResponseViewElement extends LitElement {
      * A list of tabs that are opened by the user (rendered in the DOM)
      */
     this[openedTabs] = ['response'];
+
+    this.compatibility = false;
   }
 
   /**
@@ -237,6 +249,8 @@ export class ResponseViewElement extends LitElement {
    * @param {Event} e
    */
   [tabCloseHandler](e) {
+    e.preventDefault();
+    e.stopPropagation();
     const node = /** @type HTMLDivElement */ (e.currentTarget);
     const { id } = node.dataset;
     const index = this[openedTabs].indexOf(id);
@@ -247,7 +261,15 @@ export class ResponseViewElement extends LitElement {
       this.requestUpdate();
       return;
     }
-    let item = this[openedTabs][index - 1];
+    let newIndex;
+    if (index === 0) {
+      // select next
+      newIndex = 0;
+    } else {
+      // select previous
+      newIndex = index - 1;
+    }
+    let item = this[openedTabs][newIndex];
     if (!item) {
       [item] = this[openedTabs];
     }
@@ -258,6 +280,37 @@ export class ResponseViewElement extends LitElement {
     }
     this.dispatchEvent(new CustomEvent('selectedchange'));
     this.requestUpdate();
+  }
+
+  /**
+   * Adds a11y support for the tabs to move between the tabs on right - left arrow
+   * @param {KeyboardEvent} e
+   */
+  [tabsKeyDownHandler](e) {
+    const tabs = /** @type string[] */ (this[openedTabs]);
+    if (tabs.length < 2) {
+      return;
+    }
+    const current = /** @type string */ (this[selectedTab]);
+    if (e.code === 'ArrowLeft') {
+      const index = tabs.indexOf(current);
+      let prev = index - 1;
+      if (prev < 0) {
+        prev = tabs.length - 1;
+      }
+      this[selectedTab] = tabs[prev];
+      this.requestUpdate();
+      this.dispatchEvent(new CustomEvent('selectedchange'));
+    } else if (e.code === 'ArrowRight') {
+      const index = tabs.indexOf(current);
+      let next = index + 1;
+      if (next >= tabs.length) {
+        next = 0;
+      }
+      this[selectedTab] = tabs[next];
+      this.requestUpdate();
+      this.dispatchEvent(new CustomEvent('selectedchange'));
+    }
   }
 
   [clearResponseHandler]() {
@@ -307,10 +360,13 @@ export class ResponseViewElement extends LitElement {
    */
   async [saveResponseFile]() {
     const { headers, payload } = this.response;
-    if (!payload || !headers) {
+    if (!payload) {
       return;
     }
-    const [contentType] = readContentType(headers);
+    let [contentType] = readContentType(headers);
+    if (!contentType) {
+      contentType = 'text/plain';
+    }
     let ext = MimeTypes[contentType];
     if (!ext) {
       ext = '.txt';
@@ -358,11 +414,17 @@ export class ResponseViewElement extends LitElement {
   }
 
   [responseTabsTemplate]() {
-    const selected = this[selectedTab];
-    const currentList = this[openedTabs];
-    const toRender = availableTabs.filter((info) => currentList.includes(info.id));
+    const selected = /** @type string */ (this[selectedTab]);
+    const currentList = /** @type string[] */ (this[openedTabs]);
+    const toRender = [];
+    currentList.forEach((id) => {
+      const model = availableTabs.find((item) => item.id === id);
+      if (model) {
+        toRender.push(model);
+      }
+    });
     return html`
-    <div class="tabs">
+    <div class="tabs" role="tablist" id="tabs" @keydown="${this[tabsKeyDownHandler]}" tabindex="0">
       ${this[tabMenu]()}
       ${toRender.map((info) => this[tabItem](info, info.id === selected))}
       ${this[clearResponseTemplate]()}
@@ -372,7 +434,7 @@ export class ResponseViewElement extends LitElement {
 
   /**
    * Renders a tab element
-   * @param {*} info
+   * @param {ResponsePanel} info
    * @param {boolean} selected
    * @returns {TemplateResult} A template for a tab item
    */
@@ -381,10 +443,11 @@ export class ResponseViewElement extends LitElement {
       tab: true,
       selected,
     };
+    const { label, id } = info;
     return html`
-    <div class=${classMap(classes)} data-id="${info.id}" @click="${this[tabClickHandler]}">
-      <span class="tab-label">${info.label}</span>
-      <arc-icon icon="close" class="tab-close" data-id="${info.id}" @click="${this[tabCloseHandler]}"></arc-icon>
+    <div class=${classMap(classes)} data-id="${id}" @click="${this[tabClickHandler]}" role="tab" aria-selected="${selected ? 'true' : 'false'}" aria-controls="panel-${id}" id="panel-tab-${id}">
+      <span class="tab-label">${label}</span>
+      <arc-icon icon="close" class="tab-close" data-id="${id}" @click="${this[tabCloseHandler]}" role="button" aria-label="Activate to close this tab"></arc-icon>
     </div>
     `;
   }
@@ -399,12 +462,13 @@ export class ResponseViewElement extends LitElement {
       closeOnActivate
       @activate="${this[tabSelectHandler]}"
       class="tabs-menu"
+      ?compatibility="${this.compatibility}"
     >
-      <anypoint-icon-button slot="dropdown-trigger">
+      <anypoint-icon-button slot="dropdown-trigger" aria-label="Activate to open tabs menu" ?compatibility="${this.compatibility}">
         <arc-icon icon="moreVert"></arc-icon>
       </anypoint-icon-button>
-      <anypoint-listbox slot="dropdown-content" attrForSelected="data-id">
-      ${availableTabs.map((item) => html`<anypoint-item data-id="${item.id}">${item.label}</anypoint-item>`)}
+      <anypoint-listbox slot="dropdown-content" attrForSelected="data-id" ?compatibility="${this.compatibility}">
+      ${availableTabs.map((item) => html`<anypoint-item data-id="${item.id}" ?compatibility="${this.compatibility}">${item.label}</anypoint-item>`)}
       </anypoint-listbox>
     </anypoint-menu-button>
     `;
@@ -429,6 +493,7 @@ export class ResponseViewElement extends LitElement {
       @click="${this[clearResponseHandler]}"
       class="clear-button"
       title="Clear the response"
+      ?compatibility="${this.compatibility}"
     >Clear</anypoint-button>
     `;
   }
@@ -453,25 +518,26 @@ export class ResponseViewElement extends LitElement {
    */
   [tabTemplate](id, selected) {
     switch (id) {
-      case 'response': return this[responseTemplate](selected);
-      case 'timings': return this[timingsTemplate](selected);
-      case 'headers': return this[detailsTemplate](selected);
-      case 'redirects': return this[redirectsTemplate](selected);
+      case 'response': return this[responseTemplate](id, selected);
+      case 'timings': return this[timingsTemplate](id, selected);
+      case 'headers': return this[detailsTemplate](id, selected);
+      case 'redirects': return this[redirectsTemplate](id, selected);
       default: return this[unknownTemplate](selected);
     }
   }
 
   /**
+   * @param {string} id The id of the panel
    * @param {boolean} opened Whether the panel is currently rendered in the view
    * @returns {TemplateResult|string} A template for the response visualization
    */
-  [responseTemplate](opened) {
+  [responseTemplate](id, opened) {
     const info = /** @type Response */ (this.response);
     const { status, statusText, payload, size, loadingTime, headers } = info;
     const typedError = /** @type ErrorResponse */ (this.response);
     const isError = !!typedError.error;
     return html`
-    <div class="panel" ?hidden="${!opened}">
+    <div class="panel" ?hidden="${!opened}" aria-hidden="${!opened ? 'true' : 'false'}" id="panel-${id}" aria-labelledby="panel-tab-${id}" role="tabpanel">
       <div class="response-meta">
         ${this[statusLabel](status, statusText)}
         ${this[loadingTimeTemplate](loadingTime)}
@@ -483,12 +549,13 @@ export class ResponseViewElement extends LitElement {
   }
 
   /**
+   * @param {string} id The id of the panel
    * @param {boolean} opened Whether the panel is currently rendered in the view
    * @returns {TemplateResult|string} A template for the headers panel.
    */
-  [detailsTemplate](opened) {
+  [detailsTemplate](id, opened) {
     return html`
-    <div class="panel" ?hidden="${!opened}">
+    <div class="panel" ?hidden="${!opened}" aria-hidden="${!opened ? 'true' : 'false'}" id="panel-${id}" aria-labelledby="panel-tab-${id}" role="tabpanel">
       ${this[urlStatusTemplate]()}
       ${this[responseHeadersTemplate]()}
       ${this[requestHeadersTemplate]()}
@@ -553,10 +620,11 @@ export class ResponseViewElement extends LitElement {
   }
 
   /**
+   * @param {string} id The id of the panel
    * @param {boolean} opened Whether the panel is currently rendered in the view
    * @returns {TemplateResult|string} A detailed information about redirects
    */
-  [redirectsTemplate](opened) {
+  [redirectsTemplate](id, opened) {
     const info = /** @type Response */ (this.response);
     if (!info) {
       return '';
@@ -564,7 +632,7 @@ export class ResponseViewElement extends LitElement {
     const { redirects } = info;
     const hasRedirects = Array.isArray(redirects) && !!redirects.length;
     return html`
-    <div class="panel" ?hidden="${!opened}">
+    <div class="panel" ?hidden="${!opened}" aria-hidden="${!opened ? 'true' : 'false'}" id="panel-${id}" aria-labelledby="panel-tab-${id}" role="tabpanel">
       ${hasRedirects ? 
         redirects.map((item, i) => this[redirectItemTemplate](item, i)) : 
         html`
@@ -577,15 +645,16 @@ export class ResponseViewElement extends LitElement {
   }
 
   /**
+   * @param {string} id The id of the panel
    * @param {boolean} opened Whether the template is currently rendered
    * @returns {TemplateResult} A template for the request timings.
    */
-  [timingsTemplate](opened) {
+  [timingsTemplate](id, opened) {
     const info = /** @type Response */ (this.response);
     const { redirects, timings } = info;
     if (!timings) {
       return html`
-        <div class="panel" ?hidden="${!opened}">
+        <div class="panel" aria-hidden="${!opened ? 'true' : 'false'}" ?hidden="${!opened}" id="panel-${id}" aria-labelledby="panel-tab-${id}" role="tabpanel">
           <div class="empty-info">
             <p>This request has no timing information</p>
           </div>
@@ -598,7 +667,7 @@ export class ResponseViewElement extends LitElement {
       startTime = requestInfo.startTime;
     }
     return html`
-    <div class="panel" ?hidden="${!opened}">
+    <div class="panel" ?hidden="${!opened}" aria-hidden="${!opened ? 'true' : 'false'}" id="panel-${id}" aria-labelledby="panel-tab-${id}" role="tabpanel">
       <request-timings-panel .redirects="${redirects}" .startTime="${startTime}" .timings="${timings}"></request-timings-panel>
     </div>`;
   }
@@ -656,15 +725,16 @@ export class ResponseViewElement extends LitElement {
       closeOnActivate
       @activate="${this[contentActionHandler]}"
       class="request-menu"
+      ?compatibility="${this.compatibility}"
     >
-      <anypoint-icon-button slot="dropdown-trigger">
+      <anypoint-icon-button slot="dropdown-trigger" aria-label="Activate to see content options" ?compatibility="${this.compatibility}">
         <arc-icon icon="moreVert"></arc-icon>
       </anypoint-icon-button>
-      <anypoint-listbox slot="dropdown-content" attrForSelected="data-id">
-        <anypoint-icon-item data-id="save">
+      <anypoint-listbox slot="dropdown-content" attrForSelected="data-id" ?compatibility="${this.compatibility}">
+        <anypoint-icon-item data-id="save" ?compatibility="${this.compatibility}">
           <arc-icon icon="archive" slot="item-icon"></arc-icon> Save to file
         </anypoint-icon-item>
-        <anypoint-icon-item data-id="copy">
+        <anypoint-icon-item data-id="copy" ?compatibility="${this.compatibility}">
           <arc-icon icon="contentCopy" slot="item-icon"></arc-icon> Copy to clipboard
         </anypoint-icon-item>
       </anypoint-listbox>
@@ -680,7 +750,10 @@ export class ResponseViewElement extends LitElement {
   [responseBodyTemplate](payload, headers='', opened) {
     return html`
     <div class="response-wrapper">
-      <response-body .body="${payload}" .headers="${headers}" .active="${opened}"></response-body>
+    ${!payload ? 
+      html`<p>The response contains no body.</p>` : 
+      html`<response-body .body="${payload}" .headers="${headers}" .active="${opened}"></response-body>`
+    }  
     </div>
     `;
   }
@@ -690,9 +763,10 @@ export class ResponseViewElement extends LitElement {
    * @returns {TemplateResult} Template for the error response
    */
   [errorResponse](error) {
+    const { message } = error;
     return html`
     <div class="response-wrapper">
-      ${error.message}
+      <response-error .message="${message || 'unknown error'}" ?compatibility="${this.compatibility}"></response-error>
     </div>
     `;
   }

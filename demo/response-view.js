@@ -37,7 +37,8 @@ class ComponentPage extends DemoPage {
     this.activePanelsHandler = this.activePanelsHandler.bind(this);
     this.generateRequest = this.generateRequest.bind(this);
 
-    this.url = window.location.href;
+    this.url = '';
+    // this.url = window.location.href;
     // this.url = 'https://xd.adobe.com/view/46b6a75a-0dfd-44ff-87c1-e1b843d03911-13e5/';
     // this.url = 'https://httpbin.org/brotli';
     // this.url = 'json.json';
@@ -190,6 +191,7 @@ class ComponentPage extends DemoPage {
         @keydown="${this.urlKeyHandler}" 
         class="url-input"
         list="inputOptions"
+        aria-label="Enter the URL value"
       />
       <datalist id="inputOptions">
         <option value="json.json"></option>
@@ -198,6 +200,7 @@ class ComponentPage extends DemoPage {
         <option value="https://httpbin.org/brotli"></option>
         <option value="https://httpbin.org/bytes/1000"></option>
         <option value="https://httpbin.org/image/svg"></option>
+        <option value="https://httpbin.org/status/404"></option>
       </datalist>
     </section>
     `;

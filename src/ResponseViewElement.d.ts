@@ -35,6 +35,7 @@ import {
   saveResponseFile,
   copyResponseClipboard,
   redirectLinkHandler,
+  tabsKeyDownHandler,
 } from './internals.js';
 
 export declare interface ResponsePanel {
@@ -68,6 +69,11 @@ export declare class ResponseViewElement extends LitElement {
    * @attribute
    */
   selected: string;
+  /** 
+   * Adds a compatibility with Anypoint styling
+   * @attribute
+   */
+  compatibility: string;
 
   /**
    * Tests whether the response is set
@@ -99,6 +105,11 @@ export declare class ResponseViewElement extends LitElement {
    * A handler for the tab close icon click. Closes a tab and selects the first in the queue available.
    */
   [tabCloseHandler](e: Event): void;
+
+  /**
+   * Adds a11y support for the tabs to move between the tabs on right - left arrow
+   */
+  [tabsKeyDownHandler](e: KeyboardEvent): void;
 
   [clearResponseHandler](): void;
 
@@ -166,16 +177,17 @@ export declare class ResponseViewElement extends LitElement {
   [tabTemplate](id: string, selected: boolean): TemplateResult;
 
   /**
+   * @param id The id of the tab to render
    * @param opened Whether the panel is currently rendered in the view
    * @returns A template for the response visualization
    */
-  [responseTemplate](opened: boolean): TemplateResult|string;
+  [responseTemplate](id: string, opened: boolean): TemplateResult|string;
 
   /**
    * @param opened Whether the panel is currently rendered in the view
    * @returns A template for the headers panel.
    */
-  [detailsTemplate](opened: boolean): TemplateResult|string;
+  [detailsTemplate](id: string, opened: boolean): TemplateResult|string;
 
   /**
    * @returns A template for the request headers, if any.
@@ -196,13 +208,13 @@ export declare class ResponseViewElement extends LitElement {
    * @param opened Whether the panel is currently rendered in the view
    * @returns A detailed information about redirects
    */
-  [redirectsTemplate](opened: boolean): TemplateResult|string;
+  [redirectsTemplate](id: string, opened: boolean): TemplateResult|string;
 
   /**
    * @param opened Whether the template is currently rendered
    * @returns A template for the request timings.
    */
-  [timingsTemplate](opened: boolean): TemplateResult;
+  [timingsTemplate](id: string, opened: boolean): TemplateResult;
 
   /**
    * @param opened Whether the template is currently rendered

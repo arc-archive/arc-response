@@ -221,7 +221,7 @@ window.addEventListener('resize', () => {
 
 // @ts-ignore
 Prism.hooks.add('complete', (env) => {
-  if (!env.code) {
+  if (!env.code || !env.element) {
     return;
   }
   Prism.plugins.lineNumbers.run(env.element.parentElement, env.code);

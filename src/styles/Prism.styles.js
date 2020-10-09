@@ -67,7 +67,7 @@ export default css `
   .token.prolog,
   .token.doctype,
   .token.cdata {
-    color: var(--code-token-comment-value-color, slategray);
+    color: var(--code-token-comment-value-color, #384654);
   }
 
   .token.punctuation {
@@ -100,7 +100,7 @@ export default css `
   .token.char,
   .token.builtin,
   .token.inserted {
-    color: var(--code-type-text-value-color, #690);
+    color: var(--code-type-text-value-color, #517900);
   }
 
   .token.operator,

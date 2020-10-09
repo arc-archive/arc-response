@@ -12,6 +12,7 @@ export default css`
   user-select: none;
   border-top: 1px #e5e5e5 solid;
   border-bottom: 1px #e5e5e5 solid;
+  outline: none;
 }
 
 .tab {
