@@ -81,24 +81,36 @@ describe('RequestTimingsPanelElement', () => {
       };
       redirects = [
         {
-          startTime: '2017-01-02T16:22:26.212Z',
-          blocked: 10.697000019718,
-          dns: -1,
-          connect: -1,
-          send: 0.34099997719749986,
-          wait: 155.50400002393852,
-          receive: 4.751000029500744,
-          ssl: -1
+          timings: {
+            blocked: 10.697000019718,
+            dns: -1,
+            connect: -1,
+            send: 0.34099997719749986,
+            wait: 155.50400002393852,
+            receive: 4.751000029500744,
+            ssl: -1
+          },
+          response: {
+            status: 0,
+          },
+          startTime: 0,
+          endTime: 0,
         },
         {
-          startTime: '2017-01-02T16:22:26.212Z',
-          blocked: 3.36500001139939,
-          dns: -1,
-          connect: -1,
-          send: 0.06499997107311994,
-          wait: 138.7439999962225,
-          receive: 4.986000014469084,
-          ssl: -1
+          timings: {
+            blocked: 3.36500001139939,
+            dns: -1,
+            connect: -1,
+            send: 0.06499997107311994,
+            wait: 138.7439999962225,
+            receive: 4.986000014469084,
+            ssl: -1
+          },
+          response: {
+            status: 0,
+          },
+          startTime: 0,
+          endTime: 0,
         }
       ];
     });
@@ -124,7 +136,6 @@ describe('RequestTimingsPanelElement', () => {
     beforeEach(async () => {
       element = await basicFixture();
       element.timings = {
-        startTime: 1483368432132,
         blocked: 7.751456734,
         dns: 279.3812349,
         connect: 883.1201243,
@@ -135,24 +146,36 @@ describe('RequestTimingsPanelElement', () => {
       };
       element.redirects = [
         {
-          startTime: 1601862918077,
-          blocked: 10.697000019718,
-          dns: -1,
-          connect: -1,
-          send: 0.34099997719749986,
-          wait: 155.50400002393852,
-          receive: 4.751000029500744,
-          ssl: -1
+          timings: {
+            blocked: 10.697000019718,
+            dns: -1,
+            connect: -1,
+            send: 0.34099997719749986,
+            wait: 155.50400002393852,
+            receive: 4.751000029500744,
+            ssl: -1
+          },
+          response: {
+            status: 0,
+          },
+          startTime: 0,
+          endTime: 0,
         },
         {
-          startTime: 1601862918077,
-          blocked: 3.36500001139939,
-          dns: -1,
-          connect: -1,
-          send: 0.06499997107311994,
-          wait: 138.7439999962225,
-          receive: 4.986000014469084,
-          ssl: -1
+          timings: {
+            blocked: 3.36500001139939,
+            dns: -1,
+            connect: -1,
+            send: 0.06499997107311994,
+            wait: 138.7439999962225,
+            receive: 4.986000014469084,
+            ssl: -1
+          },
+          response: {
+            status: 0,
+          },
+          startTime: 0,
+          endTime: 0,
         }
       ];
       await nextFrame();
@@ -181,7 +204,6 @@ describe('RequestTimingsPanelElement', () => {
     beforeEach(async () => {
       element = await basicFixture();
       element.timings = {
-        startTime: 1483368432132,
         blocked: 7.751456734,
         dns: 279.3812349,
         connect: 883.1201243,
@@ -192,24 +214,36 @@ describe('RequestTimingsPanelElement', () => {
       };
       element.redirects = [
         {
-          startTime: 1601862918077,
-          blocked: 10.697000019718,
-          dns: -1,
-          connect: -1,
-          send: 0.34099997719749986,
-          wait: 155.50400002393852,
-          receive: 4.751000029500744,
-          ssl: -1
+          timings: {
+            blocked: 10.697000019718,
+            dns: -1,
+            connect: -1,
+            send: 0.34099997719749986,
+            wait: 155.50400002393852,
+            receive: 4.751000029500744,
+            ssl: -1
+          },
+          response: {
+            status: 0,
+          },
+          startTime: 0,
+          endTime: 0,
         },
         {
-          startTime: 1601862918077,
-          blocked: 3.36500001139939,
-          dns: -1,
-          connect: -1,
-          send: 0.06499997107311994,
-          wait: 138.7439999962225,
-          receive: 4.986000014469084,
-          ssl: -1
+          timings: {
+            blocked: 3.36500001139939,
+            dns: -1,
+            connect: -1,
+            send: 0.06499997107311994,
+            wait: 138.7439999962225,
+            receive: 4.986000014469084,
+            ssl: -1
+          },
+          response: {
+            status: 0,
+          },
+          startTime: 0,
+          endTime: 0,
         }
       ];
       await nextFrame();

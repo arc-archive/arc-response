@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, minimum-scale=1, initial-scale=1, user-scalable=yes">
+  <title>Response view</title>
+  <style>
+  .centered[role="main"] {
+    max-width: 1400px;
+  }
+
+  body.styled {
+    --arc-font-code-family: 'Roboto Mono', 'Consolas', 'Menlo', monospace;
+  }
+
+  body.styled.dark {
+    --primary-background-color: #373737;
+  }
+
+  response-view {
+    flex: 1;
+    min-height: 500px;
+  }
+
+  .url-input {
+    width: 100%;
+    padding: 4px 12px;
+  }
+  </style>
+</head>
+
+<body>
+  <div id="demo"></div>
+  <script type="module" src="response-view.js"></script>
+</body>
+
+</html>

@@ -14,9 +14,9 @@ A module containing the UI regions and the logic to render and support HTTP resp
 npm install --save @advanced-rest-client/arc-response
 ```
 
-## request-timings
+## request-timings and request-timings-panel
 
-An element to render request timings information from HAR 1.2  timings object
+An element to render request timings information from HAR 1.2  timings object. The "panel" element renders a series of timings, including redirects.
 
 ### Example
 
@@ -33,6 +33,21 @@ class SampleElement extends LitElement {
 }
 customElements.define('sample-element', SampleElement);
 ```
+
+## response-view
+
+The main response view for the Advanced REST Client. It takes `request` and `response` set on the element to generate the view from the data.
+The request and response objects types are defined in [arc-types](https://github.com/advanced-rest-client/arc-types) as `ArcRequest.TransportRequest` and `ArcResponse.Response`.
+
+## response-body
+
+An element to render the response visualization matched its content type header of the response.
+In most cases it renders highlighted code via PrismJS. In some cases it renders specialized view
+for PDF, binary, and image files.
+
+## response-highlight
+
+An element that performs syntax highlighting for the current body.
 
 ## Development
 
