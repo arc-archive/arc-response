@@ -48,6 +48,7 @@ export const availableTabs: ResponsePanel[];
 /**
  * @fires activechange When a list of active panels change
  * @fires selectedchange When a list of active panels change
+ * @fires clear Dispatched when the user press the `clear` button.
  */
 export declare class ResponseViewElement extends LitElement {
   static readonly styles: CSSResult;
@@ -55,7 +56,7 @@ export declare class ResponseViewElement extends LitElement {
   /**
    * ARC HTTP response object
    */
-  response: ArcResponse.Response;
+  response: ArcResponse.Response | ArcResponse.ErrorResponse;
   /** 
    * ARC HTTP request object
    */

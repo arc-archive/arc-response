@@ -19,7 +19,7 @@ const activePanelsKey = 'demo.responseView.activePanels';
 class ComponentPage extends DemoPage {
   constructor() {
     super();
-    this.initObservableProperties(['response', 'request', 'panels', 'selected']);
+    this.initObservableProperties(['response', 'request']);
     this.componentName = 'response-view';
     this.demoStates = ['Regular'];
     this.renderViewControls = true;
@@ -36,6 +36,7 @@ class ComponentPage extends DemoPage {
     this.selectedPanelHandler = this.selectedPanelHandler.bind(this);
     this.activePanelsHandler = this.activePanelsHandler.bind(this);
     this.generateRequest = this.generateRequest.bind(this);
+    this.panelClear = this.panelClear.bind(this);
 
     this.url = '';
     // this.url = window.location.href;
@@ -158,6 +159,13 @@ class ComponentPage extends DemoPage {
     this.response = this.generator.generateResponse({ timings: true, ssl: true, redirects: true,  });
   }
 
+  panelClear() {
+    console.log('clearing');
+    this.response = undefined;
+    this.request = undefined;
+    this.render();
+  }
+
   _demoTemplate() {
     const {
       response,
@@ -165,6 +173,7 @@ class ComponentPage extends DemoPage {
       panels,
       selected,
     } = this;
+    console.log(response);
     return html`
     <section class="documentation-section">
       <h3>Interactive demo</h3>
@@ -176,6 +185,7 @@ class ComponentPage extends DemoPage {
         .active="${panels}"
         @selectedchange="${this.selectedPanelHandler}"
         @activechange="${this.activePanelsHandler}"
+        @clear="${this.panelClear}"
       ></response-view>
     </section>
     `;

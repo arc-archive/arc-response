@@ -1,4 +1,5 @@
 /* eslint-disable no-plusplus */
+/** @typedef {import('@advanced-rest-client/arc-types/src/request/ArcResponse').TransformedPayload} TransformedPayload */
 /**
  * Computes size in the nearest units
  * @param {number} bytes
@@ -19,7 +20,7 @@ export function bytesToSize(bytes, decimals = 2) {
 }
 
 /**
- * @param {string|Buffer|ArrayBuffer} body The body 
+ * @param {string|Buffer|ArrayBuffer|TransformedPayload} body The body 
  * @returns {string}
  */
 export function readBodyString(body) {

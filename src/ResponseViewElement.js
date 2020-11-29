@@ -1,3 +1,4 @@
+/* eslint-disable lit-a11y/click-events-have-key-events */
 /* eslint-disable class-methods-use-this */
 /**
 @license
@@ -75,6 +76,7 @@ import {
 /** @typedef {import('@advanced-rest-client/arc-types').ArcResponse.RequestsSize} RequestsSize */
 /** @typedef {import('@advanced-rest-client/arc-types').ArcRequest.TransportRequest} TransportRequest */
 /** @typedef {import('@advanced-rest-client/arc-types').ArcResponse.ResponseRedirect} ResponseRedirect */
+/** @typedef {import('@advanced-rest-client/arc-types/src/request/ArcResponse').TransformedPayload} TransformedPayload */
 /** @typedef {import('./ResponseViewElement').ResponsePanel} ResponsePanel */
 
 /** 
@@ -315,7 +317,8 @@ export class ResponseViewElement extends LitElement {
 
   [clearResponseHandler]() {
     this.request = undefined;
-    this.response = undefined
+    this.response = undefined;
+    this.dispatchEvent(new CustomEvent('clear'));
   }
 
   /**
@@ -742,7 +745,7 @@ export class ResponseViewElement extends LitElement {
   }
 
   /**
-   * @param {string|Buffer|ArrayBuffer} payload The response payload
+   * @param {string|Buffer|ArrayBuffer|TransformedPayload} payload The response payload
    * @param {string} headers The response headers
    * @param {boolean} opened True when the panel is currently rendered
    * @returns {TemplateResult} Template for the response preview
