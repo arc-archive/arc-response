@@ -197,4 +197,9 @@ summary {
 .redirect-code {
   margin: 4px 0;
 }
+
+:host(.scrolling-region) .panel {
+  height: 100%;
+  overflow: auto;
+}
 `;

@@ -186,6 +186,7 @@ class ComponentPage extends DemoPage {
         @selectedchange="${this.selectedPanelHandler}"
         @activechange="${this.activePanelsHandler}"
         @clear="${this.panelClear}"
+        class="scrolling-region"
       ></response-view>
     </section>
     `;
