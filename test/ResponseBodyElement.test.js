@@ -99,6 +99,15 @@ describe('ResponseBodyElement', () => {
   /**
    * @returns {Promise<ResponseBodyElement>}
    */
+  async function rawOnlyFixture() {
+    const body = str2ab('{"test": true}');
+    const headers = HeadersGenerator.generateHeaders('response', 'application/json');
+    return fixture(html`<response-body .body="${body}" .headers="${headers}" rawOnly></response-body>`);
+  }
+
+  /**
+   * @returns {Promise<ResponseBodyElement>}
+   */
   async function basicFixture() {
     return fixture(html`<response-body></response-body>`);
   }
@@ -187,6 +196,20 @@ describe('ResponseBodyElement', () => {
       assert.ok(out, 'has the element');
       assert.typeOf(out.code, 'string', 'has [arsed body to string');
       assert.equal(out.lang, 'application/json', 'has [arsed body to string');
+    });
+  });
+
+  describe('Forced raw data', () => {
+    let element = /** @type ResponseBodyElement */ (null);
+
+    before(async () => {
+      element = await rawOnlyFixture();
+      await aTimeout(0);
+    });
+
+    it('renders raw element', async () => {
+      const out = element.shadowRoot.querySelector('.raw-view');
+      assert.ok(out, 'has the element');
     });
   });
 

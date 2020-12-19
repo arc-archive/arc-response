@@ -1,3 +1,4 @@
+/* eslint-disable no-param-reassign */
 import { fixture, assert, html, nextFrame } from '@open-wc/testing';
 import { DataExportEventTypes, WorkspaceEventTypes } from '@advanced-rest-client/arc-events';
 import { DataGenerator, HeadersGenerator } from '@advanced-rest-client/arc-data-generator';
@@ -63,7 +64,34 @@ describe('ResponseViewElement', () => {
     return dataFixture(request, response);
   }
 
-  const allPanels = ['response', 'timings', 'headers', 'redirects'];
+  function rand(length, current='') {
+    return length ? rand(--length, "0123456789ABCDEFGHIJKLMNOPQRSTUVWXTZabcdefghiklmnopqrstuvwxyz".charAt(Math.floor(Math.random() * 60)) + current) : current;
+  }
+
+  /**
+   * @returns {Promise<ResponseViewElement>}
+   */
+  async function responseSizeFixture(size=4089) {
+    const r = generator.generateHistoryObject();
+    const request = /** @type TransportRequest */ ({
+      url: r.url,
+      method: r.method,
+      startTime: Date.now() - 1000,
+      endTime: Date.now(),
+      httpMessage: 'Not available',
+      headers: HeadersGenerator.generateHeaders('request'),
+    });
+    const response = generator.generateResponse({ timings: true, ssl: true, redirects: true });
+    const body = rand(size);
+    response.payload = body;
+    response.size = {
+      response: size,
+      request: request.httpMessage.length,
+    };
+    return fixture(html`<response-view .request="${request}" .response="${response}" forceRawSize="1" warningResponseMaxSize="2"></response-view>`);
+  }
+
+  const allPanels = ['response', 'timings', 'headers', 'redirects', 'raw'];
 
   describe('#active', () => {
     let element = /** @type ResponseViewElement */ (null);
@@ -242,6 +270,17 @@ describe('ResponseViewElement', () => {
       assert.isFalse(panel.hasAttribute('hidden'), 'panel is not hidden');
     });
 
+    it('renders the "raw" panel after selection', async () => {
+      element.active = ['raw'];
+      element.selected = 'raw';
+      await nextFrame();
+      const panel = element.shadowRoot.querySelector('#panel-raw');
+      assert.ok(panel, 'has the panel');
+      assert.isFalse(panel.hasAttribute('hidden'), 'panel is not hidden');
+      const bodyPanel = panel.querySelector('response-body');
+      assert.isTrue(bodyPanel.rawOnly, 'The body panel is set to render raw view only')
+    });
+
     it('renders only a single panel', async () => {
       element.active = allPanels;
       element.selected = 'redirects';
@@ -252,6 +291,41 @@ describe('ResponseViewElement', () => {
       const other = element.shadowRoot.querySelectorAll('.panel:not(#panel-redirects)');
       Array.from(other).forEach((item) => {
         assert.isTrue(item.hasAttribute('hidden'), 'panel is hidden');
+      });
+    });
+  });
+
+  describe('Response rendering limits', () => {
+    describe('Size limit warning message', () => {
+      let element = /** @type ResponseViewElement */ (null);
+      beforeEach(async () => { element = await responseSizeFixture(); } );
+
+      it('renders the warning message', () => {
+        const node = element.shadowRoot.querySelector('.size-warning');
+        assert.ok(node, 'has the warning message');
+      });
+
+      it('renders the "render" button', () => {
+        const node = element.shadowRoot.querySelector('.size-warning anypoint-button');
+        assert.ok(node, 'has the render button');
+      });
+
+      it('renders the response when the "render" button is activated', async () => {
+        const button = /** @type HTMLElement */ (element.shadowRoot.querySelector('.size-warning anypoint-button'));
+        button.click();
+        await nextFrame();
+        const node = element.shadowRoot.querySelector('.response-wrapper response-body');
+        assert.ok(node, 'has the parsed panel');
+      });
+    });
+
+    describe('Raw only limit', () => {
+      let element = /** @type ResponseViewElement */ (null);
+      beforeEach(async () => { element = await responseSizeFixture(1025); } );
+
+      it('sets the rawOnly on the body view', () => {
+        const node = element.shadowRoot.querySelector('response-body');
+        assert.isTrue(node.rawOnly);
       });
     });
   });
@@ -267,13 +341,13 @@ describe('ResponseViewElement', () => {
     it('closes an active panel', async () => {
       const button = /** @type HTMLElement */ (element.shadowRoot.querySelector('#panel-tab-response .tab-close'));
       button.click();
-      assert.deepEqual(element.active, ['timings', 'headers', 'redirects']);
+      assert.deepEqual(element.active, ['timings', 'headers', 'redirects', 'raw']);
     });
 
     it('closes an other panel', async () => {
       const button = /** @type HTMLElement */ (element.shadowRoot.querySelector('#panel-tab-timings .tab-close'));
       button.click();
-      assert.deepEqual(element.active, ['response', 'headers', 'redirects']);
+      assert.deepEqual(element.active, ['response', 'headers', 'redirects', 'raw']);
     });
 
     it('changes the active panel when first tab', async () => {
@@ -458,7 +532,7 @@ describe('ResponseViewElement', () => {
         });
         tabs.dispatchEvent(e);
         await nextFrame();
-        assert.equal(element.selected, 'redirects');
+        assert.equal(element.selected, 'raw');
         const panel = element.shadowRoot.querySelector('#panel-redirects');
         assert.ok(panel);
       });
@@ -488,7 +562,7 @@ describe('ResponseViewElement', () => {
       });
 
       it('selects first tab when ArrowRight on the last', async () => {
-        element.selected = 'redirects';
+        element.selected = 'raw';
         await nextFrame();
         const e = new KeyboardEvent('keydown', {
           code: 'ArrowRight',
