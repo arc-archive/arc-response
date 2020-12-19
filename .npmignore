@@ -4,3 +4,5 @@ demo/
 CONTRIBUTING.md
 .*
 *.config.*
+tsconfig.json
+custom-elements.json
