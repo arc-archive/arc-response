@@ -729,6 +729,7 @@ export class ResponseViewElement extends LitElement {
       @activate="${this[contentActionHandler]}"
       class="request-menu"
       ?compatibility="${this.compatibility}"
+      horizontalAlign="right"
     >
       <anypoint-icon-button slot="dropdown-trigger" aria-label="Activate to see content options" ?compatibility="${this.compatibility}">
         <arc-icon icon="moreVert"></arc-icon>
