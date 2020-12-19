@@ -248,11 +248,11 @@ class ComponentPage extends DemoPage {
       <h3>Response limits</h3>
       <div class="input-row">
         <label for="forceRawSize">Raw view only size limit</label>
-        <input id="forceRawSize" name="forceRawSize" type="number" .value="${this.forceRawSize}" @change="${this.limitHandler}"/>
+        <input id="forceRawSize" name="forceRawSize" type="number" .value="${String(this.forceRawSize)}" @change="${this.limitHandler}"/>
       </div>
       <div class="input-row">
         <label for="warningResponseMaxSize">Size warning limit</label>
-        <input id="warningResponseMaxSize" name="warningResponseMaxSize" type="number" .value="${this.warningResponseMaxSize}" @change="${this.limitHandler}"/>
+        <input id="warningResponseMaxSize" name="warningResponseMaxSize" type="number" .value="${String(this.warningResponseMaxSize)}" @change="${this.limitHandler}"/>
       </div>
     </section>
     `;

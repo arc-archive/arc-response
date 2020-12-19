@@ -74,6 +74,7 @@ import {
   sizeRawLimitTriggered,
   sizeWarningTemplate,
   clearSizeWarning,
+  rawTemplate,
 } from './internals.js';
 
 /** @typedef {import('lit-element').TemplateResult} TemplateResult */
@@ -106,7 +107,11 @@ export const availableTabs = [
   {
     id: 'redirects',
     label: 'Redirects',
-  }
+  },
+  {
+    id: 'raw',
+    label: 'Raw',
+  },
 ];
 
 /**
@@ -606,6 +611,7 @@ export class ResponseViewElement extends LitElement {
       case 'timings': return this[timingsTemplate](id, selected);
       case 'headers': return this[detailsTemplate](id, selected);
       case 'redirects': return this[redirectsTemplate](id, selected);
+      case 'raw': return this[rawTemplate](id, selected);
       default: return this[unknownTemplate](selected);
     }
   }
@@ -725,6 +731,23 @@ export class ResponseViewElement extends LitElement {
         </div>
         `
       }
+    </div>`;
+  }
+
+  /**
+   * @param {string} id The id of the panel
+   * @param {boolean} opened Whether the panel is currently rendered in the view
+   * @returns {TemplateResult|string} A detailed information about redirects
+   */
+  [rawTemplate](id, opened) {
+    const info = /** @type Response */ (this.response);
+    if (!info) {
+      return '';
+    }
+    const { payload, headers } = info;
+    return html`
+    <div class="panel" ?hidden="${!opened}" aria-hidden="${!opened ? 'true' : 'false'}" id="panel-${id}" aria-labelledby="panel-tab-${id}" role="tabpanel">
+      <response-body .body="${payload}" .headers="${headers}" .active="${opened}" rawOnly></response-body>
     </div>`;
   }
 
