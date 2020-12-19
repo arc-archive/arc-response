@@ -163,7 +163,7 @@ export class ResponseBodyElement extends LitElement {
     this[selectedType] = selected;
     this[imageDataUrlValue] = imageDataUrl;
     if (types.includes('parsed')) {
-      this[rawValue] = readBodyString(body);
+      this[rawValue] = readBodyString(body, charset);
     } else {
       this[rawValue] = body;
     }
@@ -287,6 +287,9 @@ export class ResponseBodyElement extends LitElement {
     const div = window.document.createElement('div');
     div.innerHTML = svgValue;
     const svgEl = div.firstElementChild;
+    if (!svgEl) {
+      return html`<p class="error">Invalid SVG response.</p>`;
+    }
     const all = Array.from(svgEl.querySelectorAll('*'));
     all.forEach((node) => {
       if (!node.attributes) {

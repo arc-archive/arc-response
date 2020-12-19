@@ -21,9 +21,10 @@ export function bytesToSize(bytes, decimals = 2) {
 
 /**
  * @param {string|Buffer|ArrayBuffer|TransformedPayload} body The body 
+ * @param {string=} charset The optional charset to use with the text decoder.
  * @returns {string}
  */
-export function readBodyString(body) {
+export function readBodyString(body, charset) {
   const type = typeof body;
   if (['string', 'boolean', 'undefined'].includes(type)) {
     return /** @type string */ (body);
@@ -35,7 +36,7 @@ export function readBodyString(body) {
     // @ts-ignore
     typed = new Uint8Array(typed.data);
   }
-  const decoder = new TextDecoder();
+  const decoder = new TextDecoder(charset);
   try {
     return decoder.decode(typed);
   } catch (e) {
