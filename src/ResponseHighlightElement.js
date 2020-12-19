@@ -1,3 +1,4 @@
+/* eslint-disable lit-a11y/click-events-have-key-events */
 /* eslint-disable class-methods-use-this */
 /**
 @license
@@ -102,6 +103,7 @@ export class ResponseHighlightElement extends LitElement {
     if (old === value) {
       return;
     }
+    this.reset();
     this[codeValue] = value;
     this[highlightResponse]();
   }
