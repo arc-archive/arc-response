@@ -75,6 +75,16 @@ export declare class ResponseViewElement extends LitElement {
    * @attribute
    */
   compatibility: string;
+  /**
+   * The size of a response that triggers "raw" view by default.
+   * @attribute
+   */
+  forceRawSize?: number;
+  /**
+   * The size of a response, in KB, that triggers warning message instead of showing the response.
+   * @attribute
+   */
+  warningResponseMaxSize?: number;
 
   /**
    * Tests whether the response is set

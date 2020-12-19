@@ -21,6 +21,7 @@ import {
   imageTemplate,
   pdfTemplate,
   parsedTemplate,
+  rawTemplate,
   svgTemplate,
   binaryTemplate,
   emptyBodyTemplate,
@@ -47,7 +48,11 @@ export class ResponseBodyElement extends LitElement {
       /** 
        * Whether the view is currently being rendered or not.
        */
-      active: { type: Boolean, }
+      active: { type: Boolean },
+      /** 
+       * When set it renders the "raw" view instead of parsed view.
+       */
+      rawOnly: { type: Boolean },
     };
   }
 
@@ -90,6 +95,7 @@ export class ResponseBodyElement extends LitElement {
   constructor() {
     super();
     this.active = false;
+    this.rawOnly = false;
   }
 
   [bodyChanged]() {
@@ -157,7 +163,7 @@ export class ResponseBodyElement extends LitElement {
     this[selectedType] = selected;
     this[imageDataUrlValue] = imageDataUrl;
     if (types.includes('parsed')) {
-      this[rawValue] = readBodyString(body, charset);
+      this[rawValue] = readBodyString(body);
     } else {
       this[rawValue] = body;
     }
@@ -201,6 +207,9 @@ export class ResponseBodyElement extends LitElement {
       return this[pdfTemplate]();
     }
     if (selected === 'parsed') {
+      if (this.rawOnly) {
+        return this[rawTemplate]();
+      }
       return this[parsedTemplate]();
     }
     if (selected === 'binary') {
@@ -257,6 +266,16 @@ export class ResponseBodyElement extends LitElement {
     const contentType = this[contentTypeValue];
     return html`
     <response-highlight .code="${body}" .lang="${contentType}" lines ?active="${this.active}"></response-highlight>
+    `;
+  }
+
+  /**
+   * @returns {TemplateResult} The template for the "raw" response view
+   */
+  [rawTemplate]() {
+    const body = this[rawValue];
+    return html`
+    <pre class="raw-view"><code>${body}</code></pre>
     `;
   }
 

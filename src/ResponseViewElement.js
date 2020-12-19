@@ -66,6 +66,14 @@ import {
   copyResponseClipboard,
   redirectLinkHandler,
   tabsKeyDownHandler,
+  responseValue,
+  responseSizeValue,
+  computeResponseSize,
+  computeResponseLimits,
+  sizeWarningLimitTriggered,
+  sizeRawLimitTriggered,
+  sizeWarningTemplate,
+  clearSizeWarning,
 } from './internals.js';
 
 /** @typedef {import('lit-element').TemplateResult} TemplateResult */
@@ -133,6 +141,14 @@ export class ResponseViewElement extends LitElement {
        * Adds a compatibility with Anypoint styling
        */
       compatibility: { type: Boolean },
+      /**
+       * The size of a response that triggers "raw" view by default.
+       */
+      forceRawSize: { type: Number },
+      /**
+       * The size of a response, in KB, that triggers warning message instead of showing the response.
+       */
+      warningResponseMaxSize: { type: Number },
     };
   }
 
@@ -185,6 +201,21 @@ export class ResponseViewElement extends LitElement {
     this[selectedTab] = value;
   }
 
+  get response() {
+    return this[responseValue];
+  }
+
+  set response(value) {
+    const old = this[responseValue];
+    if (old === value) {
+      return;
+    }
+    this[responseValue] = value;
+    this[responseSizeValue] = this[computeResponseSize](value);
+    this[computeResponseLimits](this[responseSizeValue]);
+    this.requestUpdate();
+  }
+
   constructor() {
     super();
     /**
@@ -197,6 +228,14 @@ export class ResponseViewElement extends LitElement {
     this[openedTabs] = ['response'];
 
     this.compatibility = false;
+    /**
+     * @type {number}
+     */
+    this.forceRawSize = undefined;
+    /**
+     * @type {number}
+     */
+    this.warningResponseMaxSize = undefined;
   }
 
   /**
@@ -409,6 +448,48 @@ export class ResponseViewElement extends LitElement {
     });
   }
 
+  /**
+   * 
+   * @param {Response} response 
+   * @returns {number|undefined}
+   */
+  [computeResponseSize](response) {
+    if (!response) {
+      return undefined;
+    }
+    const { size } = response;
+    if (!size || Number.isNaN(size.response)) {
+      return undefined;
+    }
+    return size.response;
+  }
+
+  /**
+   * Computes variables responsible for rendering response size warnings.
+   * @param {number} size The response size
+   */
+  [computeResponseLimits](size) {
+    this[sizeRawLimitTriggered] = false;
+    this[sizeWarningLimitTriggered] = false;
+    if (!size || typeof size !== 'number') {
+      return;
+    }
+    const { forceRawSize, warningResponseMaxSize } = this;
+    if (typeof forceRawSize === 'number' && forceRawSize) {
+      const limit = forceRawSize * 1024;
+      this[sizeRawLimitTriggered] = size >= limit;
+    }
+    if (typeof warningResponseMaxSize === 'number' && warningResponseMaxSize) {
+      const limit = warningResponseMaxSize * 1024;
+      this[sizeWarningLimitTriggered] = size >= limit;
+    }
+  }
+
+  [clearSizeWarning]() {
+    this[sizeWarningLimitTriggered] = false;
+    this.requestUpdate();
+  }
+
   render() {
     return html`
     ${this[responseTabsTemplate]()}
@@ -536,7 +617,7 @@ export class ResponseViewElement extends LitElement {
    */
   [responseTemplate](id, opened) {
     const info = /** @type Response */ (this.response);
-    const { status, statusText, payload, size, loadingTime, headers } = info;
+    const { status, statusText, payload, loadingTime, headers } = info;
     const typedError = /** @type ErrorResponse */ (this.response);
     const isError = !!typedError.error;
     return html`
@@ -544,7 +625,7 @@ export class ResponseViewElement extends LitElement {
       <div class="response-meta">
         ${this[statusLabel](status, statusText)}
         ${this[loadingTimeTemplate](loadingTime)}
-        ${this[responseSizeTemplate](size)}
+        ${this[responseSizeTemplate]()}
         ${this[responseOptionsTemplate]()}
       </div>
       ${isError ? this[errorResponse](typedError.error) : this[responseBodyTemplate](payload, headers, opened)}
@@ -709,14 +790,14 @@ export class ResponseViewElement extends LitElement {
   }
 
   /**
-   * @param {RequestsSize} size The response size value
    * @returns {TemplateResult|string} Template for the response size
    */
-  [responseSizeTemplate](size) {
-    if (!size || Number.isNaN(size.response)) {
+  [responseSizeTemplate]() {
+    const size = this[responseSizeValue];
+    if (size === undefined) {
       return '';
     }
-    return html`<span class="response-size-label">Size: ${bytesToSize(size.response)}</span>`;
+    return html`<span class="response-size-label">Size: ${bytesToSize(size)}</span>`;
   }
 
   /**
@@ -752,12 +833,28 @@ export class ResponseViewElement extends LitElement {
    * @returns {TemplateResult} Template for the response preview
    */
   [responseBodyTemplate](payload, headers='', opened) {
+    if (!payload) {
+      return html`<p>The response contains no body.</p>`;
+    }
+    const rawTriggered = this[sizeRawLimitTriggered];
+    const sizeTriggered = this[sizeWarningLimitTriggered];
     return html`
     <div class="response-wrapper">
-    ${!payload ? 
-      html`<p>The response contains no body.</p>` : 
-      html`<response-body .body="${payload}" .headers="${headers}" .active="${opened}"></response-body>`
+    ${sizeTriggered ? 
+        this[sizeWarningTemplate]() : 
+        html`<response-body .body="${payload}" .headers="${headers}" .active="${opened}" .rawOnly="${rawTriggered}"></response-body>`
     }  
+    </div>
+    `;
+  }
+
+  [sizeWarningTemplate]() {
+    const { warningResponseMaxSize } = this;
+    return html`
+    <div class="size-warning">
+      <p>The request size exceeded <b>${bytesToSize(warningResponseMaxSize*1024)}</b> and its rendering may slow down the application or crash the process.</p>
+      <anypoint-button @click="${this[clearSizeWarning]}" title="Show the response anyway">Show response</anypoint-button>
+      <p class="info-message"><arc-icon icon="infoOutline"></arc-icon> You can change the limit in application settings.</p>
     </div>
     `;
   }

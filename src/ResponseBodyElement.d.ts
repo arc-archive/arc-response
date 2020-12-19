@@ -41,6 +41,12 @@ export declare class ResponseBodyElement extends LitElement {
    * @attribute
    */
   active: boolean;
+  /** 
+   * When set it renders the "raw" view instead of parsed view.
+   * @attribute
+   */
+  rawOnly?: boolean;
+
   [processingTimeout]?: boolean;
   [imageDataUrlValue]?: string;
   [selectedType]?: string;

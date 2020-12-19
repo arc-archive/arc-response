@@ -19,7 +19,7 @@ const activePanelsKey = 'demo.responseView.activePanels';
 class ComponentPage extends DemoPage {
   constructor() {
     super();
-    this.initObservableProperties(['response', 'request']);
+    this.initObservableProperties(['response', 'request', 'forceRawSize', 'warningResponseMaxSize']);
     this.componentName = 'response-view';
     this.demoStates = ['Regular'];
     this.renderViewControls = true;
@@ -28,6 +28,8 @@ class ComponentPage extends DemoPage {
     this.request = undefined;
     this.panels = undefined;
     this.selected = undefined;
+    this.forceRawSize = 4096;
+    this.warningResponseMaxSize = 2048;
     this.generator = new DataGenerator();
 
     this.restoreLocal();
@@ -43,7 +45,8 @@ class ComponentPage extends DemoPage {
     // this.url = 'https://xd.adobe.com/view/46b6a75a-0dfd-44ff-87c1-e1b843d03911-13e5/';
     // this.url = 'https://httpbin.org/brotli';
     // this.url = 'json.json';
-    window.addEventListener(DataExportEventTypes.fileSave, this.fileSaveHandler.bind(this))
+    window.addEventListener(DataExportEventTypes.fileSave, this.fileSaveHandler.bind(this));
+    this.limitHandler = this.limitHandler.bind(this);
   }
 
   /** 
@@ -166,12 +169,23 @@ class ComponentPage extends DemoPage {
     this.render();
   }
 
+  /**
+   * @param {Event} e 
+   */
+  limitHandler(e) {
+    const input = /** @type HTMLInputElement */ (e.target);
+    const { name, value } = input;
+    this[name] = Number(value);
+  }
+
   _demoTemplate() {
     const {
       response,
       request,
       panels,
       selected,
+      forceRawSize,
+      warningResponseMaxSize,
     } = this;
     console.log(response);
     return html`
@@ -183,6 +197,8 @@ class ComponentPage extends DemoPage {
         .request="${request}"
         .selected="${selected}"
         .active="${panels}"
+        .forceRawSize="${forceRawSize}"
+        .warningResponseMaxSize="${warningResponseMaxSize}"
         @selectedchange="${this.selectedPanelHandler}"
         @activechange="${this.activePanelsHandler}"
         @clear="${this.panelClear}"
@@ -226,12 +242,29 @@ class ComponentPage extends DemoPage {
     `;
   }
 
+  limitsTemplate() {
+    return html`
+    <section class="documentation-section">
+      <h3>Response limits</h3>
+      <div class="input-row">
+        <label for="forceRawSize">Raw view only size limit</label>
+        <input id="forceRawSize" name="forceRawSize" type="number" .value="${this.forceRawSize}" @change="${this.limitHandler}"/>
+      </div>
+      <div class="input-row">
+        <label for="warningResponseMaxSize">Size warning limit</label>
+        <input id="warningResponseMaxSize" name="warningResponseMaxSize" type="number" .value="${this.warningResponseMaxSize}" @change="${this.limitHandler}"/>
+      </div>
+    </section>
+    `;
+  }
+
   contentTemplate() {
     return html`
       <h2>ARC response view</h2>
       ${this._demoTemplate()}
       ${this.demoRequest()}
       ${this.generatorOptionsTemplate()}
+      ${this.limitsTemplate()}
     `;
   }
 }

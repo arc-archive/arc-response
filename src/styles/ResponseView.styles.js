@@ -202,4 +202,20 @@ summary {
   height: 100%;
   overflow: auto;
 }
+
+.size-warning {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 40px 0;
+}
+
+.info-message {
+  display: flex;
+  align-items: center;
+}
+
+.info-message arc-icon {
+  margin-right: 12px;
+}
 `;
