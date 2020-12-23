@@ -3,6 +3,7 @@ import { fixture, assert, html, nextFrame } from '@open-wc/testing';
 import { DataExportEventTypes, WorkspaceEventTypes } from '@advanced-rest-client/arc-events';
 import { DataGenerator, HeadersGenerator } from '@advanced-rest-client/arc-data-generator';
 import sinon from 'sinon';
+import { availableTabs } from '../src/ResponseViewElement.js';
 import '../response-view.js';
 
 /** @typedef {import('../index').ResponseViewElement} ResponseViewElement */
@@ -498,6 +499,54 @@ describe('ResponseViewElement', () => {
       button.click();
       const { providerOptions } = spy.args[0][0];
       assert.include(providerOptions.file, '.json');
+    });
+  });
+
+  describe('#types', () => {
+    let element = /** @type ResponseViewElement */ (null);
+    beforeEach(async () => { element = await autoFixture(); } );
+
+    it('has the default list of panels', () => {
+      assert.deepEqual(element.effectivePanels, availableTabs);
+    });
+
+    it('renders all tab options by default', () => {
+      const nodes = element.shadowRoot.querySelectorAll('.tabs-menu anypoint-item');
+      assert.lengthOf(nodes, 5);
+    });
+
+    it('computes a single panel option', () => {
+      element.types = 'timings';
+      assert.lengthOf(element.effectivePanels, 1, 'has single effectivePanel');
+      assert.equal(element.effectivePanels[0].id, 'timings');
+    });
+
+    it('renders a single tab option', async () => {
+      element.types = 'timings';
+      await nextFrame();
+      const nodes = element.shadowRoot.querySelectorAll('.tabs-menu anypoint-item');
+      assert.lengthOf(nodes, 1);
+    });
+
+    it('computes a multi panel option', () => {
+      element.types = 'timings,headers';
+      assert.lengthOf(element.effectivePanels, 2, 'has 2 effectivePanels');
+      assert.equal(element.effectivePanels[0].id, 'timings');
+      assert.equal(element.effectivePanels[1].id, 'headers');
+    });
+
+    it('renders a single tab option', async () => {
+      element.types = 'timings,headers';
+      await nextFrame();
+      const nodes = element.shadowRoot.querySelectorAll('.tabs-menu anypoint-item');
+      assert.lengthOf(nodes, 2);
+    });
+
+    it('ignores invalid options', () => {
+      element.types = 'timings,some,headers';
+      assert.lengthOf(element.effectivePanels, 2, 'has 2 effectivePanels');
+      assert.equal(element.effectivePanels[0].id, 'timings');
+      assert.equal(element.effectivePanels[1].id, 'headers');
     });
   });
 

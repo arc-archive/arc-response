@@ -75,6 +75,9 @@ import {
   sizeWarningTemplate,
   clearSizeWarning,
   rawTemplate,
+  typesValue,
+  computeEffectiveTypes,
+  effectiveTypesValue,
 } from './internals.js';
 
 /** @typedef {import('lit-element').TemplateResult} TemplateResult */
@@ -154,6 +157,12 @@ export class ResponseViewElement extends LitElement {
        * The size of a response, in KB, that triggers warning message instead of showing the response.
        */
       warningResponseMaxSize: { type: Number },
+      /** 
+       * The list of coma separated names of the editors to enable.
+       * This must be the list of `id` values from the available editors.
+       * Possible values: `response,timings,headers,redirects,raw`
+       */
+      types: { type: String, reflect: true },
     };
   }
 
@@ -180,7 +189,8 @@ export class ResponseViewElement extends LitElement {
     if (old === value || !Array.isArray(value) && value !== null && value !== undefined) {
       return;
     }
-    this[openedTabs] = (value || []).filter((item) => availableTabs.some((tab) => tab.id === item));
+    const tabs = this.effectivePanels;
+    this[openedTabs] = (value || []).filter((item) => tabs.some((tab) => tab.id === item));
     this.requestUpdate();
   }
 
@@ -199,7 +209,7 @@ export class ResponseViewElement extends LitElement {
     if (old === value) {
       return;
     }
-    const valid = availableTabs.some((tab) => tab.id === value);
+    const valid = this.effectivePanels.some((tab) => tab.id === value);
     if (!valid) {
       return;
     }
@@ -219,6 +229,27 @@ export class ResponseViewElement extends LitElement {
     this[responseSizeValue] = this[computeResponseSize](value);
     this[computeResponseLimits](this[responseSizeValue]);
     this.requestUpdate();
+  }
+
+  get types() {
+    return this[typesValue];
+  }
+
+  set types(value) {
+    const old = this[typesValue];
+    if (old === value) {
+      return;
+    }
+    this[typesValue] = value;
+    this[effectiveTypesValue] = this[computeEffectiveTypes](value);
+    this.requestUpdate('types', old);
+  }
+
+  /**
+   * @returns {ResponsePanel[]} The final list of panels to render.
+   */
+  get effectivePanels() {
+    return this[effectiveTypesValue] || availableTabs;
   }
 
   constructor() {
@@ -495,6 +526,21 @@ export class ResponseViewElement extends LitElement {
     this.requestUpdate();
   }
 
+  /**
+   * Handles the change to the `enabledEditors` property and, when set, computes a list of
+   * editors to enable in the view. The resulted list of a sublist of the `editorTypes` list.
+   * @param {string=} list
+   * @returns {ResponsePanel[]|undefined}
+   */
+  [computeEffectiveTypes](list) {
+    if (!list || typeof list !== 'string') {
+      return undefined;
+    }
+    const parts = list.split(',').map((item) => item.trim());
+    const result = availableTabs.filter((item) => parts.includes(item.id));
+    return result;
+  }
+
   render() {
     return html`
     ${this[responseTabsTemplate]()}
@@ -506,8 +552,9 @@ export class ResponseViewElement extends LitElement {
     const selected = /** @type string */ (this[selectedTab]);
     const currentList = /** @type string[] */ (this[openedTabs]);
     const toRender = [];
+    const tabs = this.effectivePanels;
     currentList.forEach((id) => {
-      const model = availableTabs.find((item) => item.id === id);
+      const model = tabs.find((item) => item.id === id);
       if (model) {
         toRender.push(model);
       }
@@ -557,7 +604,7 @@ export class ResponseViewElement extends LitElement {
         <arc-icon icon="moreVert"></arc-icon>
       </anypoint-icon-button>
       <anypoint-listbox slot="dropdown-content" attrForSelected="data-id" ?compatibility="${this.compatibility}">
-      ${availableTabs.map((item) => html`<anypoint-item data-id="${item.id}" ?compatibility="${this.compatibility}">${item.label}</anypoint-item>`)}
+      ${this.effectivePanels.map((item) => html`<anypoint-item data-id="${item.id}" ?compatibility="${this.compatibility}">${item.label}</anypoint-item>`)}
       </anypoint-listbox>
     </anypoint-menu-button>
     `;

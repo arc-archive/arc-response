@@ -98,3 +98,7 @@ export const activeValue = Symbol('activeValue');
 export const pageTemplate = Symbol('pageTemplate');
 export const messageChanged = Symbol('messageChanged');
 export const messageValue = Symbol('messageValue');
+
+export const typesValue = Symbol('typesValue');
+export const computeEffectiveTypes = Symbol('computeEffectiveTypes');
+export const effectiveTypesValue = Symbol('effectiveTypesValue');

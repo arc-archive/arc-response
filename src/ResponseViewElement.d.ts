@@ -36,7 +36,19 @@ import {
   copyResponseClipboard,
   redirectLinkHandler,
   tabsKeyDownHandler,
-} from './internals.js';
+  responseValue,
+  responseSizeValue,
+  computeResponseSize,
+  computeResponseLimits,
+  sizeWarningLimitTriggered,
+  sizeRawLimitTriggered,
+  sizeWarningTemplate,
+  clearSizeWarning,
+  rawTemplate,
+  typesValue,
+  computeEffectiveTypes,
+  effectiveTypesValue,
+} from './internals';
 
 export declare interface ResponsePanel {
   id: string;
@@ -57,6 +69,7 @@ export declare class ResponseViewElement extends LitElement {
    * ARC HTTP response object
    */
   response: ArcResponse.Response | ArcResponse.ErrorResponse;
+  [responseValue]: ArcResponse.Response | ArcResponse.ErrorResponse;
   /** 
    * ARC HTTP request object
    */
@@ -89,10 +102,28 @@ export declare class ResponseViewElement extends LitElement {
   /**
    * Tests whether the response is set
    */
-  readonly hasResponse: boolean;
+  get hasResponse(): boolean;
+
+  /** 
+   * The list of coma separated names of the editors to enable.
+   * This must be the list of `id` values from the available editors.
+   * Possible values: `response,timings,headers,redirects,raw`
+   * @attribute
+   */
+  types?: string;
+  [typesValue]: string;
+  /**
+   * @returns {ResponsePanel[]} The final list of panels to render.
+   */
+  get effectivePanels(): ResponsePanel[];
+  [effectiveTypesValue]: ResponsePanel[];
 
   [selectedTab]: string;
   [openedTabs]: string[];
+
+  [responseSizeValue]?: number;
+  [sizeWarningLimitTriggered]: boolean;
+  [sizeRawLimitTriggered]: boolean;
 
   constructor();
 
@@ -152,6 +183,22 @@ export declare class ResponseViewElement extends LitElement {
    * A handler for the click event in the response panel
    */
   [redirectLinkHandler](e: CustomEvent): void;
+
+  [computeResponseSize](response: ArcResponse.Response): number|undefined;
+
+  /**
+   * Computes variables responsible for rendering response size warnings.
+   * @param size The response size
+   */
+  [computeResponseLimits](size: number): void;
+
+  [clearSizeWarning](): void;
+
+  /**
+   * Handles the change to the `enabledEditors` property and, when set, computes a list of
+   * editors to enable in the view. The resulted list of a sublist of the `editorTypes` list.
+   */
+  [computeEffectiveTypes](list: string): ResponsePanel[]|undefined;
 
   render(): TemplateResult;
 
@@ -222,6 +269,13 @@ export declare class ResponseViewElement extends LitElement {
   [redirectsTemplate](id: string, opened: boolean): TemplateResult|string;
 
   /**
+   * @param id The id of the panel
+   * @param opened Whether the panel is currently rendered in the view
+   * @returns A detailed information about redirects
+   */
+  [rawTemplate](id: string, opened: boolean): TemplateResult|string;
+
+  /**
    * @param opened Whether the template is currently rendered
    * @returns A template for the request timings.
    */
@@ -264,6 +318,8 @@ export declare class ResponseViewElement extends LitElement {
    * @returns Template for the response preview
    */
   [responseBodyTemplate](payload: string|Buffer|ArrayBuffer, headers: string, opened: boolean): TemplateResult;
+
+  [sizeWarningTemplate](): TemplateResult;
 
   /**
    * @returns Template for the error response
