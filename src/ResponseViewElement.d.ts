@@ -87,7 +87,7 @@ export declare class ResponseViewElement extends LitElement {
    * Adds a compatibility with Anypoint styling
    * @attribute
    */
-  compatibility: string;
+  compatibility: boolean;
   /**
    * The size of a response that triggers "raw" view by default.
    * @attribute
