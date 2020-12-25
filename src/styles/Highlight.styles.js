@@ -27,7 +27,7 @@ pre {
   left: -3.8em;
   width: 3em; /* works for line-numbers below 1000 lines */
   letter-spacing: -1px;
-  border-right: 1px solid #999;
+  border-right: 1px solid var(--response-code-line-numbers-border-color, #999);
   user-select: none;
 }
 
@@ -38,7 +38,7 @@ pre {
 
 .line-numbers-rows > span:before {
   content: counter(linenumber);
-  color: #999;
+  color: var(--response-code-line-numbers-color, #999);
   display: block;
   padding-right: 0.8em;
   text-align: right;
@@ -65,7 +65,7 @@ pre {
   width: 12px;
   height: 12px;
   left: -8px;
-  border: 1px solid rgb(229, 229, 229);
+  border: 1px solid var(--response-code-toggle-line-border-color, rgb(229, 229, 229));
   display: inline-flex;
   align-items: center;
   justify-content: center;

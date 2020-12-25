@@ -32,7 +32,7 @@ paper-progress {
 
 .timing-label {
   width: var(--request-timings-label-width, 160px);
-  font-weight: 200;
+  /* font-weight: 200; */
 }
 
 .timing-value {
@@ -46,7 +46,7 @@ paper-progress {
   margin-top: 12px;
   padding-top: 12px;
   font-weight: 500;
-  border-top: 2px var(--paper-grey-200, rgba(255, 0, 0, 0.74)) solid;
+  border-top: 2px var(--request-timings-total-border-color, rgba(255, 255, 255, 0.74)) solid;
 }
 
 .row.is-total {

@@ -10,8 +10,8 @@ export default css`
   display: flex;
   align-items: center;
   user-select: none;
-  border-top: 1px #e5e5e5 solid;
-  border-bottom: 1px #e5e5e5 solid;
+  border-top: 1px var(--response-tabs-border-color, #e5e5e5) solid;
+  border-bottom: 1px var(--response-tabs-border-color, #e5e5e5) solid;
   outline: none;
 }
 
@@ -38,11 +38,11 @@ export default css`
 }
 
 .tab-close:hover {
-  background-color: #e5e5e5;
+  background-color: var(--response-tab-close-hover-background-color, #e5e5e5);
 }
 
 .tab-close:active {
-  background-color: #FFE0B2;
+  background-color: var(--response-tab-close-active-background-color, #FFE0B2);
 }
 
 .tab.selected .tab-close,
@@ -61,7 +61,7 @@ export default css`
 
 .empty-background {
   flex: 1;
-  background: #EEEEEE;
+  background: var(--response-empty-panel-background-color, #EEEEEE);
 }
 
 .empty-screen {
@@ -80,7 +80,7 @@ export default css`
 
 .response-meta {
   padding: 4px 12px;
-  border-bottom: 1px #e5e5e5 solid;
+  border-bottom: 1px var(--response-tabs-border-color, #e5e5e5) solid;
 }
 
 .loading-time-label {
