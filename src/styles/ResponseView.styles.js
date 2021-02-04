@@ -198,6 +198,14 @@ summary {
   margin: 4px 0;
 }
 
+.panel {
+  background: var(--response-view-panel, var(--primary-background-color, inherit));
+}
+
+.panel:not(#panel-response) {
+  padding: 8px;
+}
+
 :host(.scrolling-region) .panel {
   height: 100%;
   overflow: auto;
