@@ -15,7 +15,7 @@ the License.
 */
 import { LitElement, html } from 'lit-element';
 import { classMap } from 'lit-html/directives/class-map.js';
-import { WorkspaceEvents } from '@advanced-rest-client/arc-events'
+import { WorkspaceEvents, UiEvents } from '@advanced-rest-client/arc-events';
 import 'prismjs/prism.js';
 import 'prismjs/components/prism-json.js';
 import 'prismjs/components/prism-javascript.js';
@@ -42,6 +42,8 @@ import {
   responseClickHandler,
   pendingViewUpdate,
   activeValue,
+  contextMenuHandler,
+  formatJson,
 } from './internals.js';
 
 /* global Prism */
@@ -60,7 +62,7 @@ export class ResponseHighlightElement extends LitElement {
       'line-numbers': this.lines,
     }
     return html`
-    <pre class="parsed-content match-braces ${classMap(classes)}">
+    <pre class="parsed-content match-braces ${classMap(classes)}" @contextmenu="${this[contextMenuHandler]}">
       <code id="output" class="language-" @click="${this[responseClickHandler]}"></code>
     </pre>
     `;
@@ -108,6 +110,9 @@ export class ResponseHighlightElement extends LitElement {
     this[highlightResponse]();
   }
 
+  /**
+   * @returns {string}
+   */
   get lang() {
     return this[contentTypeValue];
   }
@@ -173,6 +178,19 @@ export class ResponseHighlightElement extends LitElement {
       node.innerHTML = '';
     }
   }
+
+  /**
+   * When supported it formats the current output.
+   */
+  format() {
+    const { code, lang } = this;
+    if (!code || typeof code !== 'string' || !lang) {
+      return;
+    }
+    if (lang.includes('json')) {
+      this[formatJson](code);
+    }
+  }
   
   /**
    * Highligh the code.
@@ -202,6 +220,7 @@ export class ResponseHighlightElement extends LitElement {
     const element = this[outputElement];
     if (element) {
       Prism.plugins.codeFolding.removeListeners(element);
+      element.innerHTML = '';
     }
     const grammar = this[detectLang](code, lang);
     const env = {
@@ -305,6 +324,42 @@ export class ResponseHighlightElement extends LitElement {
       case 'application/xml':
       case 'text/xml': return 'xml';
       default: return type;
+    }
+  }
+
+  /**
+   * Handles the `contextmenu` event and dispatches internal event to be handled by the hosting application.
+   * @param {MouseEvent} e 
+   */
+  [contextMenuHandler](e) {
+    const selection = window.getSelection();
+    if (selection.type === 'Range') {
+      return;
+    }
+    const { code, lang } = this;
+    UiEvents.contextMenu(this, {
+      mouseEvent: e,
+      selector: 'response-highlighter',
+      target: this,
+      args: {
+        code, lang,
+      },
+    });
+  }
+
+  /**
+   * Formats the current code as JSON string and re-renders the view.
+   * @param {string} code
+   */
+  [formatJson](code) {
+    try {
+      const parsed = JSON.parse(code);
+      const formatted = JSON.stringify(parsed, null, 2);
+      const { lang } = this;
+      this [tokenize](formatted, lang);
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.error(e);
     }
   }
 }

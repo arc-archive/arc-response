@@ -102,3 +102,5 @@ export const messageValue = Symbol('messageValue');
 export const typesValue = Symbol('typesValue');
 export const computeEffectiveTypes = Symbol('computeEffectiveTypes');
 export const effectiveTypesValue = Symbol('effectiveTypesValue');
+export const contextMenuHandler = Symbol('contextMenuHandler');
+export const formatJson = Symbol('formatJson');

@@ -12,6 +12,8 @@ import {
   responseClickHandler,
   pendingViewUpdate,
   activeValue,
+  contextMenuHandler,
+  formatJson,
 } from './internals.js';
 
 
@@ -69,6 +71,11 @@ export class ResponseHighlightElement extends LitElement {
    * Resets the state of the renderer to the initial state.
    */
   reset(): void;
+
+  /**
+   * When supported it formats the current output.
+   */
+  format(): void;
   
   /**
    * Highligh the code.
@@ -102,4 +109,14 @@ export class ResponseHighlightElement extends LitElement {
    * @returns The same content type or language name if found mapping.
    */
   [contentTypeToLang](type: string): string;
+
+   /**
+   * Handles the `contextmenu` event and dispatches internal event to be handled by the hosting application.
+   */
+  [contextMenuHandler](e: MouseEvent): void;
+
+  /**
+   * Formats the current code as JSON string and re-renders the view.
+   */
+  [formatJson](code: string): void;
 }

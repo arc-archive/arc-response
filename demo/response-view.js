@@ -3,7 +3,7 @@ import { DemoPage } from '@advanced-rest-client/arc-demo-helper';
 import '@advanced-rest-client/arc-demo-helper/arc-interactive-demo.js';
 import '@anypoint-web-components/anypoint-switch/anypoint-switch.js';
 import { HeadersParser } from '@advanced-rest-client/arc-headers';
-import { DataExportEventTypes } from '@advanced-rest-client/arc-events';
+import { DataExportEventTypes, UiEventTypes } from '@advanced-rest-client/arc-events';
 import { DataGenerator, HeadersGenerator } from '@advanced-rest-client/arc-data-generator';
 import '../response-view.js';
 
@@ -46,6 +46,7 @@ class ComponentPage extends DemoPage {
     // this.url = 'https://httpbin.org/brotli';
     // this.url = 'json.json';
     window.addEventListener(DataExportEventTypes.fileSave, this.fileSaveHandler.bind(this));
+    window.addEventListener(UiEventTypes.contextMenu, this.contextMenuHandler.bind(this));
     this.limitHandler = this.limitHandler.bind(this);
   }
 
@@ -65,6 +66,10 @@ class ComponentPage extends DemoPage {
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);  
     }, 0); 
+  }
+
+  contextMenuHandler(e) {
+    console.log(e.detail);
   }
 
   /**
