@@ -219,8 +219,10 @@ export class ResponseHighlightElement extends LitElement {
   [tokenize](code, lang) {
     const element = this[outputElement];
     if (element) {
-      Prism.plugins.codeFolding.removeListeners(element);
       element.innerHTML = '';
+      if (Prism.plugins.codeFolding) {
+        Prism.plugins.codeFolding.removeListeners(element);
+      }
     }
     const grammar = this[detectLang](code, lang);
     const env = {
