@@ -27,6 +27,12 @@ import {
   emptyBodyTemplate,
 } from './internals.js';
 
+export const defaultBinaryTypes = [
+  'application/zip', 'application/gzip', 'application/octet-stream', 'application/pkcs8',
+  'application/x-bzip', 'application/x-bzip2', 'application/msword', 'application/x-7z-compressed',
+  'application/epub+zip', 'application/java-archive', 'application/ogg', 'audio/opus', 'application/x-tar'
+];
+
 /** @typedef {import('lit-element').TemplateResult} TemplateResult */
 
 export class ResponseBodyElement extends LitElement {
@@ -151,7 +157,14 @@ export class ResponseBodyElement extends LitElement {
       } else if (contentType === 'application/pdf') {
         types.push('pdf');
         selected = 'pdf'
-      } else if (contentType === 'application/octet-stream') {
+      } else if (
+        defaultBinaryTypes.includes(contentType) || 
+        contentType.startsWith('audio/') ||
+        contentType.startsWith('video/') ||
+        contentType.startsWith('font/') ||
+        contentType.startsWith('application/vnd') ||
+        contentType.startsWith('model/')
+      ) {
         types.push('binary');
         selected = 'binary'
       } else {
