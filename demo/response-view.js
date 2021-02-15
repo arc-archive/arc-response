@@ -164,7 +164,7 @@ class ComponentPage extends DemoPage {
       httpMessage: 'Not available',
       headers: HeadersGenerator.generateHeaders('request'),
     });
-    this.response = this.generator.generateResponse({ timings: true, ssl: true, redirects: true,  });
+    this.response = this.generator.generateResponse({ timings: true, ssl: true, redirects: true });
   }
 
   panelClear() {

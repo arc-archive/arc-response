@@ -358,7 +358,7 @@ export class ResponseHighlightElement extends LitElement {
       const parsed = JSON.parse(code);
       const formatted = JSON.stringify(parsed, null, 2);
       const { lang } = this;
-      this [tokenize](formatted, lang);
+      this[tokenize](formatted, lang);
     } catch (e) {
       // eslint-disable-next-line no-console
       console.error(e);
