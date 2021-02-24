@@ -6,7 +6,7 @@ import { readTimingValue, computeHarTime, computeRequestTime, redirectsTableTemp
  * An element to render a set of ARC HAR timings.
  */
 export class RequestTimingsPanelElement extends LitElement {
-  static readonly styles: CSSResult;
+  get styles(): CSSResult;
 
   /**
    * An array of HAR 1.2 timings object.

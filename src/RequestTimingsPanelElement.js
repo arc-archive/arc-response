@@ -25,7 +25,7 @@ import { readTimingValue, computeHarTime, computeRequestTime, redirectsTableTemp
  * An element to render a set of ARC HAR timings.
  */
 export class RequestTimingsPanelElement extends LitElement {
-  static get styles() {
+  get styles() {
     return elementStyles;
   }
 
@@ -117,7 +117,10 @@ export class RequestTimingsPanelElement extends LitElement {
   }
 
   render() {
-    return this.hasRedirects ? this[redirectsTableTemplate]() : this[timingsTemplate]();
+    return html`
+    <style>${this.styles}</style>
+    ${this.hasRedirects ? this[redirectsTableTemplate]() : this[timingsTemplate]()}
+    `;
   }
 
   /**

@@ -63,7 +63,7 @@ export const availableTabs: ResponsePanel[];
  * @fires clear Dispatched when the user press the `clear` button.
  */
 export declare class ResponseViewElement extends LitElement {
-  static readonly styles: CSSResult;
+  get styles(): CSSResult;
 
   /**
    * ARC HTTP response object

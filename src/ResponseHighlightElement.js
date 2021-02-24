@@ -53,7 +53,7 @@ import {
  *
  */
 export class ResponseHighlightElement extends LitElement {
-   static get styles() {
+  get styles() {
     return [prismStyles, elementStyles];
   }
 
@@ -62,6 +62,7 @@ export class ResponseHighlightElement extends LitElement {
       'line-numbers': this.lines,
     }
     return html`
+    <style>${this.styles}</style>
     <pre class="parsed-content match-braces ${classMap(classes)}" @contextmenu="${this[contextMenuHandler]}">
       <code id="output" class="language-" @click="${this[responseClickHandler]}"></code>
     </pre>

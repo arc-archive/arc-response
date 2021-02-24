@@ -14,7 +14,7 @@ import {
  * if the message is one of the Chrome's network errors (net::*).
  */
 export class ResponseErrorElement extends LitElement {
-  static readonly styles: CSSResult;
+  get styles(): CSSResult;
 
   /**
    * Message to display.

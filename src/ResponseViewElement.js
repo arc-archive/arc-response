@@ -122,7 +122,7 @@ export const availableTabs = [
  * @fires selectedchange When a list of active panels change
  */
 export class ResponseViewElement extends LitElement {
-  static get styles() {
+  get styles() {
     return elementStyles;
   }
 
@@ -543,6 +543,7 @@ export class ResponseViewElement extends LitElement {
 
   render() {
     return html`
+    <style>${this.styles}</style>
     ${this[responseTabsTemplate]()}
     ${this[tabContentTemplate]()}
     `;

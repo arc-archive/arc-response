@@ -22,7 +22,7 @@ import {
  * An element to render request timings data according to the HAR 1.2 spec.
  */
 export class RequestTimingsElement extends LitElement {
-  static readonly styles: CSSResult;
+  get styles(): CSSResult;
 
   /**
    * A timings object as described in HAR 1.2 spec.

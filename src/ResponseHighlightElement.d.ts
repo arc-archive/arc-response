@@ -22,7 +22,7 @@ import {
  *
  */
 export class ResponseHighlightElement extends LitElement {
-  static readonly styles: CSSResult;
+  get styles(): CSSResult;
 
   render(): TemplateResult;
 

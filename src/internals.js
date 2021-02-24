@@ -104,3 +104,4 @@ export const computeEffectiveTypes = Symbol('computeEffectiveTypes');
 export const effectiveTypesValue = Symbol('effectiveTypesValue');
 export const contextMenuHandler = Symbol('contextMenuHandler');
 export const formatJson = Symbol('formatJson');
+export const stylesTemplate = Symbol('stylesTemplate');
