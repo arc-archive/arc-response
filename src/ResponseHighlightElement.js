@@ -225,9 +225,18 @@ export class ResponseHighlightElement extends LitElement {
         Prism.plugins.codeFolding.removeListeners(element);
       }
     }
-    const grammar = this[detectLang](code, lang);
+    let body = code;
+    if ((lang || '').includes('json')) {
+      try {
+        const parsed = JSON.parse(body);
+        body = JSON.stringify(parsed, null, 2);
+      } catch (e) {
+        // ...
+      }
+    }
+    const grammar = this[detectLang](body, lang);
     const env = {
-      code,
+      code: body,
       grammar,
       language: lang,
       element,
@@ -235,7 +244,7 @@ export class ResponseHighlightElement extends LitElement {
     // @ts-ignore
     Prism.hooks.run('before-highlight', env);
     // @ts-ignore
-    const result = Prism.highlight(code, grammar, lang);
+    const result = Prism.highlight(body, grammar, lang);
     /* istanbul ignore else */
     if (element) {
       element.innerHTML += result;
