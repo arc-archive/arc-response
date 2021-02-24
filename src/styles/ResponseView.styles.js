@@ -202,7 +202,8 @@ summary {
   background: var(--response-view-panel, var(--primary-background-color, inherit));
 }
 
-.panel:not(#panel-response) {
+.panel:not(#panel-response):not(#panel-raw),
+response-body {
   padding: 8px;
 }
 

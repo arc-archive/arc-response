@@ -45,6 +45,8 @@ import {
   tabContentTemplate,
   tabTemplate,
   responseTemplate,
+  responseMetaTemplate,
+  responsePrefixTemplate,
   detailsTemplate,
   unknownTemplate,
   timingsTemplate,
@@ -53,6 +55,7 @@ import {
   loadingTimeTemplate,
   responseSizeTemplate,
   responseOptionsTemplate,
+  responseOptionsItemsTemplate,
   responseBodyTemplate,
   errorResponse,
   requestHeadersTemplate,
@@ -671,19 +674,38 @@ export class ResponseViewElement extends LitElement {
    */
   [responseTemplate](id, opened) {
     const info = /** @type Response */ (this.response);
-    const { status, statusText, payload, loadingTime, headers } = info;
+    const { payload, headers } = info;
     const typedError = /** @type ErrorResponse */ (this.response);
     const isError = !!typedError.error;
     return html`
     <div class="panel" ?hidden="${!opened}" aria-hidden="${!opened ? 'true' : 'false'}" id="panel-${id}" aria-labelledby="panel-tab-${id}" role="tabpanel">
-      <div class="response-meta">
-        ${this[statusLabel](status, statusText)}
-        ${this[loadingTimeTemplate](loadingTime)}
-        ${this[responseSizeTemplate]()}
-        ${this[responseOptionsTemplate]()}
-      </div>
+      ${this[responseMetaTemplate]()}
+      ${this[responsePrefixTemplate]()}
       ${isError && !payload ? this[errorResponse](typedError.error) : this[responseBodyTemplate](payload, headers, opened)}
     </div>`;
+  }
+
+  /**
+   * @returns {TemplateResult} A template for the response meta data row
+   */
+  [responseMetaTemplate]() {
+    const info = /** @type Response */ (this.response);
+    const { status, statusText, loadingTime } = info;
+    return html`
+    <div class="response-meta">
+      ${this[statusLabel](status, statusText)}
+      ${this[loadingTimeTemplate](loadingTime)}
+      ${this[responseSizeTemplate]()}
+      ${this[responseOptionsTemplate]()}
+    </div>
+    `;
+  }
+
+  /**
+   * @returns {TemplateResult|string} A template for child classes to insert content between the response meta row and the response view.
+   */
+  [responsePrefixTemplate]() {
+    return '';
   }
 
   /**
@@ -795,6 +817,8 @@ export class ResponseViewElement extends LitElement {
     const { payload, headers } = info;
     return html`
     <div class="panel" ?hidden="${!opened}" aria-hidden="${!opened ? 'true' : 'false'}" id="panel-${id}" aria-labelledby="panel-tab-${id}" role="tabpanel">
+      ${this[responseMetaTemplate]()}
+      ${this[responsePrefixTemplate]()}
       <response-body .body="${payload}" .headers="${headers}" .active="${opened}" rawOnly></response-body>
     </div>`;
   }
@@ -872,7 +896,7 @@ export class ResponseViewElement extends LitElement {
   }
 
   /**
-   * @returns {TemplateResult} A template for response options drop down
+   * @returns {TemplateResult} A template for the response options drop down
    */
   [responseOptionsTemplate]() {
     return html`
@@ -887,14 +911,23 @@ export class ResponseViewElement extends LitElement {
         <arc-icon icon="moreVert"></arc-icon>
       </anypoint-icon-button>
       <anypoint-listbox slot="dropdown-content" attrForSelected="data-id" ?compatibility="${this.compatibility}">
-        <anypoint-icon-item data-id="save" ?compatibility="${this.compatibility}">
-          <arc-icon icon="archive" slot="item-icon"></arc-icon> Save to file
-        </anypoint-icon-item>
-        <anypoint-icon-item data-id="copy" ?compatibility="${this.compatibility}">
-          <arc-icon icon="contentCopy" slot="item-icon"></arc-icon> Copy to clipboard
-        </anypoint-icon-item>
+        ${this[responseOptionsItemsTemplate]()}
       </anypoint-listbox>
     </anypoint-menu-button>`;
+  }
+
+  /**
+   * @returns {TemplateResult} A template for the response options items
+   */
+  [responseOptionsItemsTemplate]() {
+    return html`
+    <anypoint-icon-item data-id="save" ?compatibility="${this.compatibility}">
+      <arc-icon icon="archive" slot="item-icon"></arc-icon> Save to file
+    </anypoint-icon-item>
+    <anypoint-icon-item data-id="copy" ?compatibility="${this.compatibility}">
+      <arc-icon icon="contentCopy" slot="item-icon"></arc-icon> Copy to clipboard
+    </anypoint-icon-item>
+    `;
   }
 
   /**

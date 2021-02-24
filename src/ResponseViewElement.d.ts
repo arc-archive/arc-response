@@ -15,6 +15,8 @@ import {
   tabContentTemplate,
   tabTemplate,
   responseTemplate,
+  responseMetaTemplate,
+  responsePrefixTemplate,
   detailsTemplate,
   unknownTemplate,
   timingsTemplate,
@@ -23,6 +25,7 @@ import {
   loadingTimeTemplate,
   responseSizeTemplate,
   responseOptionsTemplate,
+  responseOptionsItemsTemplate,
   responseBodyTemplate,
   errorResponse,
   requestHeadersTemplate,
@@ -63,7 +66,7 @@ export const availableTabs: ResponsePanel[];
  * @fires clear Dispatched when the user press the `clear` button.
  */
 export declare class ResponseViewElement extends LitElement {
-  get styles(): CSSResult;
+  get styles(): CSSResult | CSSResult[];
 
   /**
    * ARC HTTP response object
@@ -242,6 +245,16 @@ export declare class ResponseViewElement extends LitElement {
   [responseTemplate](id: string, opened: boolean): TemplateResult|string;
 
   /**
+   * @returns A template for the response meta data row
+   */
+  [responseMetaTemplate](): TemplateResult;
+
+  /**
+   * @returns A template for child classes to insert content between the response meta row and the response view.
+   */
+  [responsePrefixTemplate](): TemplateResult|string;
+
+  /**
    * @param opened Whether the panel is currently rendered in the view
    * @returns A template for the headers panel.
    */
@@ -307,9 +320,14 @@ export declare class ResponseViewElement extends LitElement {
   [responseSizeTemplate](size: ArcResponse.RequestsSize): TemplateResult|string;
 
   /**
-   * @returns A template for response options drop down
+   * @returns A template for the response options drop down
    */
   [responseOptionsTemplate](): TemplateResult;
+
+  /**
+   * @returns A template for the response options items
+   */
+  [responseOptionsItemsTemplate](): TemplateResult;
 
   /**
    * @param payload The response payload
