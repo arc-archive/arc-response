@@ -682,7 +682,7 @@ export class ResponseViewElement extends LitElement {
         ${this[responseSizeTemplate]()}
         ${this[responseOptionsTemplate]()}
       </div>
-      ${isError ? this[errorResponse](typedError.error) : this[responseBodyTemplate](payload, headers, opened)}
+      ${isError && !payload ? this[errorResponse](typedError.error) : this[responseBodyTemplate](payload, headers, opened)}
     </div>`;
   }
 

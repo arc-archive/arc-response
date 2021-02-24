@@ -8,6 +8,7 @@ import '../response-view.js';
 
 /** @typedef {import('../index').ResponseViewElement} ResponseViewElement */
 /** @typedef {import('@advanced-rest-client/arc-types').ArcResponse.Response} Response */
+/** @typedef {import('@advanced-rest-client/arc-types').ArcResponse.ErrorResponse} ErrorResponse */
 /** @typedef {import('@advanced-rest-client/arc-types').ArcRequest.TransportRequest} TransportRequest */
 
 describe('ResponseViewElement', () => {
@@ -21,7 +22,7 @@ describe('ResponseViewElement', () => {
 
   /**
    * @param {TransportRequest} request
-   * @param {Response} response
+   * @param {Response|ErrorResponse} response
    * @returns {Promise<ResponseViewElement>}
    */
   async function dataFixture(request, response) {
@@ -293,6 +294,44 @@ describe('ResponseViewElement', () => {
       Array.from(other).forEach((item) => {
         assert.isTrue(item.hasAttribute('hidden'), 'panel is hidden');
       });
+    });
+  });
+
+
+  describe('error rendering', () => {
+    it('renders the error message when error', async () => {
+      const r = generator.generateHistoryObject();
+      const request = /** @type TransportRequest */ ({
+        url: r.url,
+        method: r.method,
+        startTime: Date.now() - 1000,
+        endTime: Date.now(),
+        httpMessage: 'Not available',
+        headers: HeadersGenerator.generateHeaders('request'),
+      });
+      const response = generator.generateErrorResponse();
+      const element = await dataFixture(request, response);
+      const errorElement = element.shadowRoot.querySelector('response-error');
+      assert.ok(errorElement);
+    });
+
+    it('renders the response view when has error and a payload', async () => {
+      const r = generator.generateHistoryObject();
+      const request = /** @type TransportRequest */ ({
+        url: r.url,
+        method: r.method,
+        startTime: Date.now() - 1000,
+        endTime: Date.now(),
+        httpMessage: 'Not available',
+        headers: HeadersGenerator.generateHeaders('request'),
+      });
+      const response = generator.generateErrorResponse();
+      response.payload = 'test-body';
+      const element = await dataFixture(request, response);
+      const errorElement = element.shadowRoot.querySelector('response-error');
+      assert.notOk(errorElement, 'response-error is not rendered');
+      const bodyElement = element.shadowRoot.querySelector('response-body');
+      assert.ok(bodyElement, 'response-body is rendered');
     });
   });
 
