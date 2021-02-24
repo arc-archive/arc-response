@@ -51,7 +51,7 @@ describe('ResponseHighlightElement', () => {
       await aTimeout(0);
       const out = element[outputElement];
       const txt = out.textContent;
-      assert.equal(txt, '{"test":true}');
+      assert.equal(txt, '{\n  "test": true\n}');
     });
   });
 
