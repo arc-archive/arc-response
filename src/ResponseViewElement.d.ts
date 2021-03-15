@@ -68,15 +68,11 @@ export const availableTabs: ResponsePanel[];
 export declare class ResponseViewElement extends LitElement {
   get styles(): CSSResult | CSSResult[];
 
-  /**
-   * ARC HTTP response object
-   */
-  response: ArcResponse.Response | ArcResponse.ErrorResponse;
   [responseValue]: ArcResponse.Response | ArcResponse.ErrorResponse;
   /** 
    * ARC HTTP request object
    */
-  request: ArcRequest.TransportRequest;
+  request: ArcRequest.ArcBaseRequest;
   /** 
    * A list of active panels (in order) rendered in the tabs.
    */

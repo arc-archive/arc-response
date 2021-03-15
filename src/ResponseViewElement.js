@@ -24,6 +24,7 @@ import '@anypoint-web-components/anypoint-button/anypoint-icon-button.js';
 import '@anypoint-web-components/anypoint-button/anypoint-button.js';
 import '@advanced-rest-client/arc-headers/headers-list.js';
 import { ExportEvents, WorkspaceEvents } from '@advanced-rest-client/arc-events';
+import { HarTransformer } from '@advanced-rest-client/arc-models';
 import elementStyles from './styles/ResponseView.styles.js';
 import { bytesToSize, readContentType, readBodyString } from './Utils.js';
 import { MimeTypes } from './lib/MimeTypes.js';
@@ -66,10 +67,13 @@ import {
   computeRedirectLocation,
   contentActionHandler,
   saveResponseFile,
+  saveResponseHar,
   copyResponseClipboard,
   redirectLinkHandler,
   tabsKeyDownHandler,
   responseValue,
+  requestValue,
+  requestChanged,
   responseSizeValue,
   computeResponseSize,
   computeResponseLimits,
@@ -86,6 +90,7 @@ import {
 /** @typedef {import('lit-element').TemplateResult} TemplateResult */
 /** @typedef {import('@anypoint-web-components/anypoint-listbox').AnypointListbox} AnypointListbox */
 /** @typedef {import('@anypoint-web-components/anypoint-menu-button').AnypointMenuButton} AnypointMenuButton */
+/** @typedef {import('@advanced-rest-client/arc-types').ArcRequest.ArcBaseRequest} ArcBaseRequest */
 /** @typedef {import('@advanced-rest-client/arc-types').ArcResponse.Response} Response */
 /** @typedef {import('@advanced-rest-client/arc-types').ArcResponse.ErrorResponse} ErrorResponse */
 /** @typedef {import('@advanced-rest-client/arc-types').ArcResponse.RequestsSize} RequestsSize */
@@ -131,10 +136,6 @@ export class ResponseViewElement extends LitElement {
 
   static get properties() {
     return {
-      /**
-       * ARC HTTP response object
-       */
-      response: { type: Object },
       /** 
        * ARC HTTP request object
        */
@@ -173,7 +174,11 @@ export class ResponseViewElement extends LitElement {
    * @returns {boolean} Tests whether the response is set
    */
   get hasResponse() {
-    const { response } = this;
+    const { request } = this;
+    if (!request) {
+      return false;
+    }
+    const { response } = request;
     return !!response;
   }
 
@@ -219,19 +224,38 @@ export class ResponseViewElement extends LitElement {
     this[selectedTab] = value;
   }
 
-  get response() {
-    return this[responseValue];
+  // get response() {
+  //   return this[responseValue];
+  // }
+
+  // set response(value) {
+  //   const old = this[responseValue];
+  //   if (old === value) {
+  //     return;
+  //   }
+  //   this[responseValue] = value;
+  //   this[responseSizeValue] = this[computeResponseSize](value);
+  //   this[computeResponseLimits](this[responseSizeValue]);
+  //   this.requestUpdate();
+  // }
+
+  /**
+   * @returns {ArcBaseRequest}
+   */
+  get request() {
+    return this[requestValue];
   }
 
-  set response(value) {
-    const old = this[responseValue];
+  /**
+   * @param {ArcBaseRequest} value
+   */
+  set request(value) {
+    const old = this[requestValue];
     if (old === value) {
       return;
     }
-    this[responseValue] = value;
-    this[responseSizeValue] = this[computeResponseSize](value);
-    this[computeResponseLimits](this[responseSizeValue]);
-    this.requestUpdate();
+    this[requestValue] = value;
+    this[requestChanged](value);
   }
 
   get types() {
@@ -259,10 +283,12 @@ export class ResponseViewElement extends LitElement {
     super();
     /**
      * The id of the currently rendered tab
+     * @type {string}
      */
     this[selectedTab] = 'response';
     /**
      * A list of tabs that are opened by the user (rendered in the DOM)
+     * @type {string[]}
      */
     this[openedTabs] = ['response'];
 
@@ -275,6 +301,16 @@ export class ResponseViewElement extends LitElement {
      * @type {number}
      */
     this.warningResponseMaxSize = undefined;
+
+    // /** 
+    //  * The ARC's base request object with the response data.
+    //  * @type {ArcBaseRequest}
+    //  */
+    // this.request = undefined;
+    /**  
+     * @type {Response | ErrorResponse}
+     */
+    this[responseValue] = undefined;
   }
 
   /**
@@ -297,6 +333,33 @@ export class ResponseViewElement extends LitElement {
   }
 
   /**
+   * Called when the request object change. Sets up variables needed to render the view.
+   * @param {ArcBaseRequest} request
+   */
+  [requestChanged](request) {
+    this[responseSizeValue] = 0;
+    this[computeResponseLimits](0);
+    this[responseValue] = undefined;
+    if (!request) {
+      this.requestUpdate();
+      return;
+    }
+    const { transportRequest, response } = request;
+    this[responseValue] = response;
+    if (!response || !transportRequest) {
+      this.requestUpdate();
+      return;
+    }
+    const typedError = /** @type ErrorResponse */ (response)
+    if (!typedError.error) {
+      const typedResponse = /** @type Response */ (response)
+      this[responseSizeValue] = this[computeResponseSize](typedResponse);
+      this[computeResponseLimits](this[responseSizeValue]);
+    }
+    this.requestUpdate();
+  }
+
+  /**
    * A handler for the content action drop down item selection
    * @param {CustomEvent} e
    */
@@ -306,6 +369,7 @@ export class ResponseViewElement extends LitElement {
     switch (id) {
       case 'save': return this[saveResponseFile]();
       case 'copy': return this[copyResponseClipboard]();
+      case 'har': return this[saveResponseHar]();
       default: return undefined;
     }
   }
@@ -395,7 +459,6 @@ export class ResponseViewElement extends LitElement {
 
   [clearResponseHandler]() {
     this.request = undefined;
-    this.response = undefined;
     this.dispatchEvent(new CustomEvent('clear'));
   }
 
@@ -440,7 +503,7 @@ export class ResponseViewElement extends LitElement {
    * Dispatches file save event with the payload.
    */
   async [saveResponseFile]() {
-    const { headers, payload } = this.response;
+    const { headers, payload } = this[responseValue];
     if (!payload) {
       return;
     }
@@ -463,9 +526,20 @@ export class ResponseViewElement extends LitElement {
    * Writes the current body to the clipboard
    */
   async [copyResponseClipboard]() {
-    const { payload } = this.response;
+    const { payload } = this[responseValue];
     const body = readBodyString(payload);
     await navigator.clipboard.writeText(body);
+  }
+
+  /**
+   * Transforms the request and the response to a HAR 1.2 format and saves as file.
+   */
+  async [saveResponseHar]() {
+    const { request } = this;
+    const transformer = new HarTransformer();
+    const result = await transformer.transform([request]);
+    // eslint-disable-next-line no-console
+    console.log(result);
   }
 
   /**
@@ -673,9 +747,9 @@ export class ResponseViewElement extends LitElement {
    * @returns {TemplateResult|string} A template for the response visualization
    */
   [responseTemplate](id, opened) {
-    const info = /** @type Response */ (this.response);
+    const info = /** @type Response */ (this[responseValue]);
     const { payload, headers } = info;
-    const typedError = /** @type ErrorResponse */ (this.response);
+    const typedError = /** @type ErrorResponse */ (this[responseValue]);
     const isError = !!typedError.error;
     return html`
     <div class="panel" ?hidden="${!opened}" aria-hidden="${!opened ? 'true' : 'false'}" id="panel-${id}" aria-labelledby="panel-tab-${id}" role="tabpanel">
@@ -689,7 +763,7 @@ export class ResponseViewElement extends LitElement {
    * @returns {TemplateResult} A template for the response meta data row
    */
   [responseMetaTemplate]() {
-    const info = /** @type Response */ (this.response);
+    const info = /** @type Response */ (this[responseValue]);
     const { status, statusText, loadingTime } = info;
     return html`
     <div class="response-meta">
@@ -726,7 +800,7 @@ export class ResponseViewElement extends LitElement {
    * @returns {TemplateResult|string} A template for the request headers, if any.
    */
   [requestHeadersTemplate]() {
-    const info = /** @type TransportRequest */ (this.request);
+    const info = this.request.transportRequest;
     if (!info) {
       return '';
     }
@@ -749,7 +823,7 @@ export class ResponseViewElement extends LitElement {
    * @returns {TemplateResult|string} A template for the url info in the headers panel
    */
   [urlStatusTemplate]() {
-    const info = /** @type TransportRequest */ (this.request);
+    const info = this.request.transportRequest;
     if (!info) {
       return '';
     }
@@ -765,7 +839,7 @@ export class ResponseViewElement extends LitElement {
    * @returns {TemplateResult|string} A template for the response headers, if any.
    */
   [responseHeadersTemplate]() {
-    const info = /** @type Response */ (this.response);
+    const info = /** @type Response */ (this[responseValue]);
     if (!info) {
       return '';
     }
@@ -785,7 +859,7 @@ export class ResponseViewElement extends LitElement {
    * @returns {TemplateResult|string} A detailed information about redirects
    */
   [redirectsTemplate](id, opened) {
-    const info = /** @type Response */ (this.response);
+    const info = /** @type Response */ (this[responseValue]);
     if (!info) {
       return '';
     }
@@ -810,7 +884,7 @@ export class ResponseViewElement extends LitElement {
    * @returns {TemplateResult|string} A detailed information about redirects
    */
   [rawTemplate](id, opened) {
-    const info = /** @type Response */ (this.response);
+    const info = /** @type Response */ (this[responseValue]);
     if (!info) {
       return '';
     }
@@ -829,7 +903,7 @@ export class ResponseViewElement extends LitElement {
    * @returns {TemplateResult} A template for the request timings.
    */
   [timingsTemplate](id, opened) {
-    const info = /** @type Response */ (this.response);
+    const info = /** @type Response */ (this[responseValue]);
     const { redirects, timings } = info;
     if (!timings) {
       return html`
@@ -841,7 +915,7 @@ export class ResponseViewElement extends LitElement {
       `;
     }
     let startTime
-    const requestInfo = /** @type TransportRequest */ (this.request);
+    const requestInfo = this.request.transportRequest;
     if (requestInfo) {
       startTime = requestInfo.startTime;
     }
@@ -926,6 +1000,9 @@ export class ResponseViewElement extends LitElement {
     </anypoint-icon-item>
     <anypoint-icon-item data-id="copy" ?compatibility="${this.compatibility}">
       <arc-icon icon="contentCopy" slot="item-icon"></arc-icon> Copy to clipboard
+    </anypoint-icon-item>
+    <anypoint-icon-item data-id="har" ?compatibility="${this.compatibility}">
+      Save as HAR 1.2
     </anypoint-icon-item>
     `;
   }
