@@ -18,12 +18,13 @@ import {
   svgTemplate,
   binaryTemplate,
   emptyBodyTemplate,
+  stylesTemplate,
 } from './internals.js';
 
 /** @typedef {import('lit-element').TemplateResult} TemplateResult */
 
 export declare class ResponseBodyElement extends LitElement {
-  static readonly styles: CSSResult;
+  get styles(): CSSResult;
 
   /** 
    * The body to render.
@@ -105,4 +106,9 @@ export declare class ResponseBodyElement extends LitElement {
    * @returns A template for a no-payload message
    */
   [emptyBodyTemplate](): TemplateResult;
+
+  /**
+   * @returns The template for the element's styles declaration.
+   */
+  [stylesTemplate](): TemplateResult;
 }

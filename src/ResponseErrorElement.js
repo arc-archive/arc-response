@@ -1,3 +1,4 @@
+/* eslint-disable class-methods-use-this */
 /**
 @license
 Copyright 2020 The Advanced REST client authors <arc@mulesoft.com>
@@ -31,7 +32,7 @@ import {
  * if the message is one of the Chrome's network errors (net::*).
  */
 export class ResponseErrorElement extends LitElement {
-  static get styles() {
+  get styles() {
     return elementStyles;
   }
 
@@ -209,6 +210,7 @@ export class ResponseErrorElement extends LitElement {
   render() {
     const { detailsPage, message } = this;
     return html`
+    <style>${this.styles}</style>
     <div class="message-wrapper">
       <div class="error-icon">
         <arc-icon class="icon" icon="sentimentNeutral"></arc-icon>

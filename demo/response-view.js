@@ -3,12 +3,13 @@ import { DemoPage } from '@advanced-rest-client/arc-demo-helper';
 import '@advanced-rest-client/arc-demo-helper/arc-interactive-demo.js';
 import '@anypoint-web-components/anypoint-switch/anypoint-switch.js';
 import { HeadersParser } from '@advanced-rest-client/arc-headers';
-import { DataExportEventTypes } from '@advanced-rest-client/arc-events';
+import { DataExportEventTypes, UiEventTypes } from '@advanced-rest-client/arc-events';
 import { DataGenerator, HeadersGenerator } from '@advanced-rest-client/arc-data-generator';
 import '../response-view.js';
 
 /** @typedef {import('@advanced-rest-client/arc-types').ArcResponse.Response} Response */
 /** @typedef {import('@advanced-rest-client/arc-types').ArcResponse.ErrorResponse} ErrorResponse */
+/** @typedef {import('@advanced-rest-client/arc-types').ArcRequest.ArcBaseRequest} ArcBaseRequest */
 /** @typedef {import('@advanced-rest-client/arc-types').ArcRequest.TransportRequest} TransportRequest */
 /** @typedef {import('@advanced-rest-client/arc-types').ArcResponse.ResponseRedirect} ResponseRedirect */
 /** @typedef {import('@advanced-rest-client/arc-events').ArcExportFilesystemEvent} ArcExportFilesystemEvent */
@@ -19,12 +20,14 @@ const activePanelsKey = 'demo.responseView.activePanels';
 class ComponentPage extends DemoPage {
   constructor() {
     super();
-    this.initObservableProperties(['response', 'request', 'forceRawSize', 'warningResponseMaxSize']);
+    this.initObservableProperties(['request', 'forceRawSize', 'warningResponseMaxSize']);
     this.componentName = 'response-view';
     this.demoStates = ['Regular'];
     this.renderViewControls = true;
     this.compatibility = false;
-    this.response = undefined;
+    /** 
+     * @type {ArcBaseRequest}
+     */
     this.request = undefined;
     this.panels = undefined;
     this.selected = undefined;
@@ -46,6 +49,7 @@ class ComponentPage extends DemoPage {
     // this.url = 'https://httpbin.org/brotli';
     // this.url = 'json.json';
     window.addEventListener(DataExportEventTypes.fileSave, this.fileSaveHandler.bind(this));
+    window.addEventListener(UiEventTypes.contextMenu, this.contextMenuHandler.bind(this));
     this.limitHandler = this.limitHandler.bind(this);
   }
 
@@ -67,6 +71,10 @@ class ComponentPage extends DemoPage {
     }, 0); 
   }
 
+  contextMenuHandler(e) {
+    console.log(e.detail);
+  }
+
   /**
    * @param {KeyboardEvent} e
    */
@@ -82,14 +90,19 @@ class ComponentPage extends DemoPage {
    * @param {string} url
    */
   async makeRequest(url) {
+    this.request = undefined;
     const startTime = Date.now();
-    const request = /** @type TransportRequest */ ({
+    const request = /** @type ArcBaseRequest */ ({
       url,
       method: 'GET',
+    });
+    const transportRequest = /** @type TransportRequest */ ({
+      ...request,
       startTime,
       endTime: 0,
       httpMessage: 'Not available',
     });
+    request.transportRequest = transportRequest;
     try {
       const response = await fetch(url, {
         redirect: "manual",
@@ -109,10 +122,11 @@ class ComponentPage extends DemoPage {
         response: body.byteLength,
       };
       result.payload = body;
-      this.response = result;
+      request.response = result;
+      this.request = request;
     } catch (e) {
       const end = Date.now();
-      this.response = /** @type ErrorResponse */({
+      const result = /** @type ErrorResponse */({
         error: e,
         status: 0,
         startTime,
@@ -120,8 +134,8 @@ class ComponentPage extends DemoPage {
         headers: '',
         payload: undefined,
       });
+      request.response = result;
     }
-    request.endTime = Date.now();
     this.request = request;
   }
 
@@ -150,8 +164,8 @@ class ComponentPage extends DemoPage {
   }
 
   generateRequest() {
-    const r = this.generator.generateHistoryObject();
-    this.request = /** @type TransportRequest */ ({
+    const r = /** @type ArcBaseRequest */ (this.generator.generateHistoryObject());
+    const tr = /** @type TransportRequest */ ({
       url: r.url,
       method: r.method,
       startTime: Date.now() - 1000,
@@ -159,12 +173,14 @@ class ComponentPage extends DemoPage {
       httpMessage: 'Not available',
       headers: HeadersGenerator.generateHeaders('request'),
     });
-    this.response = this.generator.generateResponse({ timings: true, ssl: true, redirects: true,  });
+    const response = this.generator.generateResponse({ timings: true, ssl: true, redirects: true });
+    r.transportRequest = tr;
+    r.response = response;
+    this.request = r;
   }
 
   panelClear() {
     console.log('clearing');
-    this.response = undefined;
     this.request = undefined;
     this.render();
   }
@@ -180,20 +196,18 @@ class ComponentPage extends DemoPage {
 
   _demoTemplate() {
     const {
-      response,
       request,
       panels,
       selected,
       forceRawSize,
       warningResponseMaxSize,
     } = this;
-    console.log(response);
+    console.log(request);
     return html`
     <section class="documentation-section">
       <h3>Interactive demo</h3>
       <response-view
         slot="content"
-        .response="${response}"
         .request="${request}"
         .selected="${selected}"
         .active="${panels}"
@@ -222,6 +236,7 @@ class ComponentPage extends DemoPage {
       />
       <datalist id="inputOptions">
         <option value="json.json"></option>
+        <option value="api.zip"></option>
         <option value="https://xd.adobe.com/view/46b6a75a-0dfd-44ff-87c1-e1b843d03911-13e5/"></option>
         <option value="${window.location.href}"></option>
         <option value="https://httpbin.org/brotli"></option>

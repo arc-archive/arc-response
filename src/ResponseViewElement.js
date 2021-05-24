@@ -24,6 +24,7 @@ import '@anypoint-web-components/anypoint-button/anypoint-icon-button.js';
 import '@anypoint-web-components/anypoint-button/anypoint-button.js';
 import '@advanced-rest-client/arc-headers/headers-list.js';
 import { ExportEvents, WorkspaceEvents } from '@advanced-rest-client/arc-events';
+import { HarTransformer } from '@api-client/har';
 import elementStyles from './styles/ResponseView.styles.js';
 import { bytesToSize, readContentType, readBodyString } from './Utils.js';
 import { MimeTypes } from './lib/MimeTypes.js';
@@ -45,6 +46,8 @@ import {
   tabContentTemplate,
   tabTemplate,
   responseTemplate,
+  responseMetaTemplate,
+  responsePrefixTemplate,
   detailsTemplate,
   unknownTemplate,
   timingsTemplate,
@@ -53,6 +56,7 @@ import {
   loadingTimeTemplate,
   responseSizeTemplate,
   responseOptionsTemplate,
+  responseOptionsItemsTemplate,
   responseBodyTemplate,
   errorResponse,
   requestHeadersTemplate,
@@ -63,10 +67,13 @@ import {
   computeRedirectLocation,
   contentActionHandler,
   saveResponseFile,
+  saveResponseHar,
   copyResponseClipboard,
   redirectLinkHandler,
   tabsKeyDownHandler,
   responseValue,
+  requestValue,
+  requestChanged,
   responseSizeValue,
   computeResponseSize,
   computeResponseLimits,
@@ -75,11 +82,15 @@ import {
   sizeWarningTemplate,
   clearSizeWarning,
   rawTemplate,
+  typesValue,
+  computeEffectiveTypes,
+  effectiveTypesValue,
 } from './internals.js';
 
 /** @typedef {import('lit-element').TemplateResult} TemplateResult */
 /** @typedef {import('@anypoint-web-components/anypoint-listbox').AnypointListbox} AnypointListbox */
 /** @typedef {import('@anypoint-web-components/anypoint-menu-button').AnypointMenuButton} AnypointMenuButton */
+/** @typedef {import('@advanced-rest-client/arc-types').ArcRequest.ArcBaseRequest} ArcBaseRequest */
 /** @typedef {import('@advanced-rest-client/arc-types').ArcResponse.Response} Response */
 /** @typedef {import('@advanced-rest-client/arc-types').ArcResponse.ErrorResponse} ErrorResponse */
 /** @typedef {import('@advanced-rest-client/arc-types').ArcResponse.RequestsSize} RequestsSize */
@@ -119,16 +130,12 @@ export const availableTabs = [
  * @fires selectedchange When a list of active panels change
  */
 export class ResponseViewElement extends LitElement {
-  static get styles() {
+  get styles() {
     return elementStyles;
   }
 
   static get properties() {
     return {
-      /**
-       * ARC HTTP response object
-       */
-      response: { type: Object },
       /** 
        * ARC HTTP request object
        */
@@ -154,6 +161,12 @@ export class ResponseViewElement extends LitElement {
        * The size of a response, in KB, that triggers warning message instead of showing the response.
        */
       warningResponseMaxSize: { type: Number },
+      /** 
+       * The list of coma separated names of the editors to enable.
+       * This must be the list of `id` values from the available editors.
+       * Possible values: `response,timings,headers,redirects,raw`
+       */
+      types: { type: String, reflect: true },
     };
   }
 
@@ -161,7 +174,11 @@ export class ResponseViewElement extends LitElement {
    * @returns {boolean} Tests whether the response is set
    */
   get hasResponse() {
-    const { response } = this;
+    const { request } = this;
+    if (!request) {
+      return false;
+    }
+    const { response } = request;
     return !!response;
   }
 
@@ -180,7 +197,8 @@ export class ResponseViewElement extends LitElement {
     if (old === value || !Array.isArray(value) && value !== null && value !== undefined) {
       return;
     }
-    this[openedTabs] = (value || []).filter((item) => availableTabs.some((tab) => tab.id === item));
+    const tabs = this.effectivePanels;
+    this[openedTabs] = (value || []).filter((item) => tabs.some((tab) => tab.id === item));
     this.requestUpdate();
   }
 
@@ -199,36 +217,63 @@ export class ResponseViewElement extends LitElement {
     if (old === value) {
       return;
     }
-    const valid = availableTabs.some((tab) => tab.id === value);
+    const valid = this.effectivePanels.some((tab) => tab.id === value);
     if (!valid) {
       return;
     }
     this[selectedTab] = value;
   }
 
-  get response() {
-    return this[responseValue];
+  /**
+   * @returns {ArcBaseRequest}
+   */
+  get request() {
+    return this[requestValue];
   }
 
-  set response(value) {
-    const old = this[responseValue];
+  /**
+   * @param {ArcBaseRequest} value
+   */
+  set request(value) {
+    const old = this[requestValue];
     if (old === value) {
       return;
     }
-    this[responseValue] = value;
-    this[responseSizeValue] = this[computeResponseSize](value);
-    this[computeResponseLimits](this[responseSizeValue]);
-    this.requestUpdate();
+    this[requestValue] = value;
+    this[requestChanged](value);
+  }
+
+  get types() {
+    return this[typesValue];
+  }
+
+  set types(value) {
+    const old = this[typesValue];
+    if (old === value) {
+      return;
+    }
+    this[typesValue] = value;
+    this[effectiveTypesValue] = this[computeEffectiveTypes](value);
+    this.requestUpdate('types', old);
+  }
+
+  /**
+   * @returns {ResponsePanel[]} The final list of panels to render.
+   */
+  get effectivePanels() {
+    return this[effectiveTypesValue] || availableTabs;
   }
 
   constructor() {
     super();
     /**
      * The id of the currently rendered tab
+     * @type {string}
      */
     this[selectedTab] = 'response';
     /**
      * A list of tabs that are opened by the user (rendered in the DOM)
+     * @type {string[]}
      */
     this[openedTabs] = ['response'];
 
@@ -241,6 +286,16 @@ export class ResponseViewElement extends LitElement {
      * @type {number}
      */
     this.warningResponseMaxSize = undefined;
+
+    // /** 
+    //  * The ARC's base request object with the response data.
+    //  * @type {ArcBaseRequest}
+    //  */
+    // this.request = undefined;
+    /**  
+     * @type {Response | ErrorResponse}
+     */
+    this[responseValue] = undefined;
   }
 
   /**
@@ -263,6 +318,33 @@ export class ResponseViewElement extends LitElement {
   }
 
   /**
+   * Called when the request object change. Sets up variables needed to render the view.
+   * @param {ArcBaseRequest} request
+   */
+  [requestChanged](request) {
+    this[responseSizeValue] = 0;
+    this[computeResponseLimits](0);
+    this[responseValue] = undefined;
+    if (!request) {
+      this.requestUpdate();
+      return;
+    }
+    const { transportRequest, response } = request;
+    this[responseValue] = response;
+    if (!response || !transportRequest) {
+      this.requestUpdate();
+      return;
+    }
+    const typedError = /** @type ErrorResponse */ (response)
+    if (!typedError.error) {
+      const typedResponse = /** @type Response */ (response)
+      this[responseSizeValue] = this[computeResponseSize](typedResponse);
+      this[computeResponseLimits](this[responseSizeValue]);
+    }
+    this.requestUpdate();
+  }
+
+  /**
    * A handler for the content action drop down item selection
    * @param {CustomEvent} e
    */
@@ -272,6 +354,7 @@ export class ResponseViewElement extends LitElement {
     switch (id) {
       case 'save': return this[saveResponseFile]();
       case 'copy': return this[copyResponseClipboard]();
+      case 'har': return this[saveResponseHar]();
       default: return undefined;
     }
   }
@@ -361,7 +444,6 @@ export class ResponseViewElement extends LitElement {
 
   [clearResponseHandler]() {
     this.request = undefined;
-    this.response = undefined;
     this.dispatchEvent(new CustomEvent('clear'));
   }
 
@@ -406,7 +488,7 @@ export class ResponseViewElement extends LitElement {
    * Dispatches file save event with the payload.
    */
   async [saveResponseFile]() {
-    const { headers, payload } = this.response;
+    const { headers, payload } = this[responseValue];
     if (!payload) {
       return;
     }
@@ -429,9 +511,24 @@ export class ResponseViewElement extends LitElement {
    * Writes the current body to the clipboard
    */
   async [copyResponseClipboard]() {
-    const { payload } = this.response;
+    const { payload } = this[responseValue];
     const body = readBodyString(payload);
     await navigator.clipboard.writeText(body);
+  }
+
+  /**
+   * Transforms the request and the response to a HAR 1.2 format and saves as file.
+   */
+  async [saveResponseHar]() {
+    const { request } = this;
+    const transformer = new HarTransformer();
+    const result = await transformer.transform([request]);
+    const data = JSON.stringify(result);
+    const file = `response-body.har`;
+    ExportEvents.fileSave(this, data, {
+      contentType: 'application/json',
+      file,
+    });
   }
 
   /**
@@ -495,8 +592,24 @@ export class ResponseViewElement extends LitElement {
     this.requestUpdate();
   }
 
+  /**
+   * Handles the change to the `enabledEditors` property and, when set, computes a list of
+   * editors to enable in the view. The resulted list of a sublist of the `editorTypes` list.
+   * @param {string=} list
+   * @returns {ResponsePanel[]|undefined}
+   */
+  [computeEffectiveTypes](list) {
+    if (!list || typeof list !== 'string') {
+      return undefined;
+    }
+    const parts = list.split(',').map((item) => item.trim());
+    const result = availableTabs.filter((item) => parts.includes(item.id));
+    return result;
+  }
+
   render() {
     return html`
+    <style>${this.styles}</style>
     ${this[responseTabsTemplate]()}
     ${this[tabContentTemplate]()}
     `;
@@ -506,8 +619,9 @@ export class ResponseViewElement extends LitElement {
     const selected = /** @type string */ (this[selectedTab]);
     const currentList = /** @type string[] */ (this[openedTabs]);
     const toRender = [];
+    const tabs = this.effectivePanels;
     currentList.forEach((id) => {
-      const model = availableTabs.find((item) => item.id === id);
+      const model = tabs.find((item) => item.id === id);
       if (model) {
         toRender.push(model);
       }
@@ -557,7 +671,7 @@ export class ResponseViewElement extends LitElement {
         <arc-icon icon="moreVert"></arc-icon>
       </anypoint-icon-button>
       <anypoint-listbox slot="dropdown-content" attrForSelected="data-id" ?compatibility="${this.compatibility}">
-      ${availableTabs.map((item) => html`<anypoint-item data-id="${item.id}" ?compatibility="${this.compatibility}">${item.label}</anypoint-item>`)}
+      ${this.effectivePanels.map((item) => html`<anypoint-item data-id="${item.id}" ?compatibility="${this.compatibility}">${item.label}</anypoint-item>`)}
       </anypoint-listbox>
     </anypoint-menu-button>
     `;
@@ -622,20 +736,39 @@ export class ResponseViewElement extends LitElement {
    * @returns {TemplateResult|string} A template for the response visualization
    */
   [responseTemplate](id, opened) {
-    const info = /** @type Response */ (this.response);
-    const { status, statusText, payload, loadingTime, headers } = info;
-    const typedError = /** @type ErrorResponse */ (this.response);
+    const info = /** @type Response */ (this[responseValue]);
+    const { payload, headers } = info;
+    const typedError = /** @type ErrorResponse */ (this[responseValue]);
     const isError = !!typedError.error;
     return html`
     <div class="panel" ?hidden="${!opened}" aria-hidden="${!opened ? 'true' : 'false'}" id="panel-${id}" aria-labelledby="panel-tab-${id}" role="tabpanel">
-      <div class="response-meta">
-        ${this[statusLabel](status, statusText)}
-        ${this[loadingTimeTemplate](loadingTime)}
-        ${this[responseSizeTemplate]()}
-        ${this[responseOptionsTemplate]()}
-      </div>
-      ${isError ? this[errorResponse](typedError.error) : this[responseBodyTemplate](payload, headers, opened)}
+      ${this[responseMetaTemplate]()}
+      ${this[responsePrefixTemplate]()}
+      ${isError && !payload ? this[errorResponse](typedError.error) : this[responseBodyTemplate](payload, headers, opened)}
     </div>`;
+  }
+
+  /**
+   * @returns {TemplateResult} A template for the response meta data row
+   */
+  [responseMetaTemplate]() {
+    const info = /** @type Response */ (this[responseValue]);
+    const { status, statusText, loadingTime } = info;
+    return html`
+    <div class="response-meta">
+      ${this[statusLabel](status, statusText)}
+      ${this[loadingTimeTemplate](loadingTime)}
+      ${this[responseSizeTemplate]()}
+      ${this[responseOptionsTemplate]()}
+    </div>
+    `;
+  }
+
+  /**
+   * @returns {TemplateResult|string} A template for child classes to insert content between the response meta row and the response view.
+   */
+  [responsePrefixTemplate]() {
+    return '';
   }
 
   /**
@@ -656,7 +789,7 @@ export class ResponseViewElement extends LitElement {
    * @returns {TemplateResult|string} A template for the request headers, if any.
    */
   [requestHeadersTemplate]() {
-    const info = /** @type TransportRequest */ (this.request);
+    const info = this.request.transportRequest;
     if (!info) {
       return '';
     }
@@ -679,7 +812,7 @@ export class ResponseViewElement extends LitElement {
    * @returns {TemplateResult|string} A template for the url info in the headers panel
    */
   [urlStatusTemplate]() {
-    const info = /** @type TransportRequest */ (this.request);
+    const info = this.request.transportRequest;
     if (!info) {
       return '';
     }
@@ -695,7 +828,7 @@ export class ResponseViewElement extends LitElement {
    * @returns {TemplateResult|string} A template for the response headers, if any.
    */
   [responseHeadersTemplate]() {
-    const info = /** @type Response */ (this.response);
+    const info = /** @type Response */ (this[responseValue]);
     if (!info) {
       return '';
     }
@@ -715,7 +848,7 @@ export class ResponseViewElement extends LitElement {
    * @returns {TemplateResult|string} A detailed information about redirects
    */
   [redirectsTemplate](id, opened) {
-    const info = /** @type Response */ (this.response);
+    const info = /** @type Response */ (this[responseValue]);
     if (!info) {
       return '';
     }
@@ -740,13 +873,15 @@ export class ResponseViewElement extends LitElement {
    * @returns {TemplateResult|string} A detailed information about redirects
    */
   [rawTemplate](id, opened) {
-    const info = /** @type Response */ (this.response);
+    const info = /** @type Response */ (this[responseValue]);
     if (!info) {
       return '';
     }
     const { payload, headers } = info;
     return html`
     <div class="panel" ?hidden="${!opened}" aria-hidden="${!opened ? 'true' : 'false'}" id="panel-${id}" aria-labelledby="panel-tab-${id}" role="tabpanel">
+      ${this[responseMetaTemplate]()}
+      ${this[responsePrefixTemplate]()}
       <response-body .body="${payload}" .headers="${headers}" .active="${opened}" rawOnly></response-body>
     </div>`;
   }
@@ -757,7 +892,7 @@ export class ResponseViewElement extends LitElement {
    * @returns {TemplateResult} A template for the request timings.
    */
   [timingsTemplate](id, opened) {
-    const info = /** @type Response */ (this.response);
+    const info = /** @type Response */ (this[responseValue]);
     const { redirects, timings } = info;
     if (!timings) {
       return html`
@@ -769,7 +904,7 @@ export class ResponseViewElement extends LitElement {
       `;
     }
     let startTime
-    const requestInfo = /** @type TransportRequest */ (this.request);
+    const requestInfo = this.request.transportRequest;
     if (requestInfo) {
       startTime = requestInfo.startTime;
     }
@@ -824,7 +959,7 @@ export class ResponseViewElement extends LitElement {
   }
 
   /**
-   * @returns {TemplateResult} A template for response options drop down
+   * @returns {TemplateResult} A template for the response options drop down
    */
   [responseOptionsTemplate]() {
     return html`
@@ -839,14 +974,26 @@ export class ResponseViewElement extends LitElement {
         <arc-icon icon="moreVert"></arc-icon>
       </anypoint-icon-button>
       <anypoint-listbox slot="dropdown-content" attrForSelected="data-id" ?compatibility="${this.compatibility}">
-        <anypoint-icon-item data-id="save" ?compatibility="${this.compatibility}">
-          <arc-icon icon="archive" slot="item-icon"></arc-icon> Save to file
-        </anypoint-icon-item>
-        <anypoint-icon-item data-id="copy" ?compatibility="${this.compatibility}">
-          <arc-icon icon="contentCopy" slot="item-icon"></arc-icon> Copy to clipboard
-        </anypoint-icon-item>
+        ${this[responseOptionsItemsTemplate]()}
       </anypoint-listbox>
     </anypoint-menu-button>`;
+  }
+
+  /**
+   * @returns {TemplateResult} A template for the response options items
+   */
+  [responseOptionsItemsTemplate]() {
+    return html`
+    <anypoint-icon-item data-id="save" ?compatibility="${this.compatibility}">
+      <arc-icon icon="archive" slot="item-icon"></arc-icon> Save to file
+    </anypoint-icon-item>
+    <anypoint-icon-item data-id="copy" ?compatibility="${this.compatibility}">
+      <arc-icon icon="contentCopy" slot="item-icon"></arc-icon> Copy to clipboard
+    </anypoint-icon-item>
+    <anypoint-icon-item data-id="har" ?compatibility="${this.compatibility}">
+      Save as HAR 1.2
+    </anypoint-icon-item>
+    `;
   }
 
   /**

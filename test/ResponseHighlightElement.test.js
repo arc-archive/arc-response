@@ -1,6 +1,6 @@
-import { WorkspaceEventTypes } from '@advanced-rest-client/arc-events';
 import sinon from 'sinon';
 import { fixture, assert, aTimeout } from '@open-wc/testing';
+import { WorkspaceEventTypes, UiEventTypes } from '@advanced-rest-client/arc-events';
 import '../response-highlight.js';
 import { 
   outputElement,
@@ -51,7 +51,7 @@ describe('ResponseHighlightElement', () => {
       await aTimeout(0);
       const out = element[outputElement];
       const txt = out.textContent;
-      assert.equal(txt, '{"test":true}');
+      assert.equal(txt, '{\n  "test": true\n}');
     });
   });
 
@@ -216,6 +216,55 @@ describe('ResponseHighlightElement', () => {
       // @ts-ignore
       Prism.plugins.lineNumbers.resize.restore();
       assert.isFalse(spy.called);
+    });
+  });
+
+  describe('format()', () => {
+    let element = /** @type ResponseHighlightElement */ (null);
+    beforeEach(async () => {
+      element = await fullFixture();
+      await aTimeout(0);
+    });
+
+    it('formats the JSON output', () => {
+      element.format();
+      const text = element[outputElement].innerText.trim();
+      assert.equal(text, '{\n  "test": true\n}');
+    });
+
+    it('does nothing for unsupported type', async () => {
+      element.lang = 'application/xml';
+      await aTimeout(0);
+      element.format();
+      const text = element[outputElement].innerText.trim();
+      assert.equal(text, '{"test": true}');
+    });
+  });
+
+  describe('Context menu', () => {
+    let element = /** @type ResponseHighlightElement */ (null);
+    beforeEach(async () => {
+      element = await fullFixture();
+      await aTimeout(0);
+    });
+
+    it('dispatches the event when context menu triggered', () => {
+      const spy = sinon.spy();
+      element.addEventListener(UiEventTypes.contextMenu, spy);
+      const node = element.shadowRoot.querySelector('.parsed-content');
+      node.dispatchEvent(new MouseEvent('contextmenu', { clientX: 100, clientY: 100 }));
+      assert.isTrue(spy.calledOnce);
+    });
+
+    it('he event has the detail properties', () => {
+      const spy = sinon.spy();
+      element.addEventListener(UiEventTypes.contextMenu, spy);
+      const node = element.shadowRoot.querySelector('.parsed-content');
+      node.dispatchEvent(new MouseEvent('contextmenu', { clientX: 100, clientY: 100 }));
+      const { detail } = spy.args[0][0];
+      assert.ok(detail.mouseEvent, 'has the original event');
+      assert.equal(detail.selector, 'response-highlighter', 'has the "selector" property');
+      assert.isTrue(detail.target === element, 'has the "target" property');
     });
   });
 });

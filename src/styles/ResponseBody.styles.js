@@ -17,4 +17,8 @@ export default css`
   align-items: center;
   justify-content: center;
 }
+
+code {
+  white-space: break-spaces;
+}
 `;

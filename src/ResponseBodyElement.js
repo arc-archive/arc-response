@@ -25,12 +25,19 @@ import {
   svgTemplate,
   binaryTemplate,
   emptyBodyTemplate,
+  stylesTemplate,
 } from './internals.js';
+
+export const defaultBinaryTypes = [
+  'application/zip', 'application/gzip', 'application/octet-stream', 'application/pkcs8',
+  'application/x-bzip', 'application/x-bzip2', 'application/msword', 'application/x-7z-compressed',
+  'application/epub+zip', 'application/java-archive', 'application/ogg', 'audio/opus', 'application/x-tar'
+];
 
 /** @typedef {import('lit-element').TemplateResult} TemplateResult */
 
 export class ResponseBodyElement extends LitElement {
-  static get styles() {
+  get styles() {
     return elementStyles;
   }
 
@@ -151,7 +158,14 @@ export class ResponseBodyElement extends LitElement {
       } else if (contentType === 'application/pdf') {
         types.push('pdf');
         selected = 'pdf'
-      } else if (contentType === 'application/octet-stream') {
+      } else if (
+        defaultBinaryTypes.includes(contentType) || 
+        contentType.startsWith('audio/') ||
+        contentType.startsWith('video/') ||
+        contentType.startsWith('font/') ||
+        contentType.startsWith('application/vnd') ||
+        contentType.startsWith('model/')
+      ) {
         types.push('binary');
         selected = 'binary'
       } else {
@@ -230,6 +244,7 @@ export class ResponseBodyElement extends LitElement {
   [imageTemplate]() {
     const src = this[imageDataUrlValue];
     return html`
+    ${this[stylesTemplate]()}
     <div class="image-container">
     <img class="img-preview" src="${src}" alt="">
     </div>
@@ -241,6 +256,7 @@ export class ResponseBodyElement extends LitElement {
    */
   [pdfTemplate]() {
     return html`
+    ${this[stylesTemplate]()}
     <div class="content-info pdf">
       <p>The response is a <b>PDF</b> data.</p>
       <p>Save the file to preview its contents.</p>
@@ -252,6 +268,7 @@ export class ResponseBodyElement extends LitElement {
    */
   [binaryTemplate]() {
     return html`
+    ${this[stylesTemplate]()}
     <div class="content-info binary">
       <p>The response is a <b>binary</b> data.</p>
       <p>Save the file to preview its contents.</p>
@@ -265,6 +282,7 @@ export class ResponseBodyElement extends LitElement {
     const body = this[rawValue];
     const contentType = this[contentTypeValue];
     return html`
+    ${this[stylesTemplate]()}
     <response-highlight .code="${body}" .lang="${contentType}" lines ?active="${this.active}"></response-highlight>
     `;
   }
@@ -275,6 +293,7 @@ export class ResponseBodyElement extends LitElement {
   [rawTemplate]() {
     const body = this[rawValue];
     return html`
+    ${this[stylesTemplate]()}
     <pre class="raw-view"><code>${body}</code></pre>
     `;
   }
@@ -301,6 +320,7 @@ export class ResponseBodyElement extends LitElement {
     const scripts = Array.from(svgEl.getElementsByTagName('script'));
     scripts.forEach((node) => node.parentNode.removeChild(node));
     return html`
+    ${this[stylesTemplate]()}
     <div class="image-container">
       ${unsafeSVG(svgEl.outerHTML)}
     </div>
@@ -312,8 +332,16 @@ export class ResponseBodyElement extends LitElement {
    */
   [emptyBodyTemplate]() {
     return html`
+    ${this[stylesTemplate]()}
     <div class="content-info empty">
       <p>The response has no body object or the response is an empty string.</p>
     </div>`;
+  }
+
+  /**
+   * @returns {TemplateResult} The template for the element's styles declaration.
+   */
+  [stylesTemplate]() {
+    return html`<style>${this.styles}</style>`;
   }
 }

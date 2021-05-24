@@ -1,13 +1,16 @@
 /* eslint-disable no-param-reassign */
-import { fixture, assert, html, nextFrame } from '@open-wc/testing';
+import { fixture, assert, html, nextFrame, oneEvent } from '@open-wc/testing';
 import { DataExportEventTypes, WorkspaceEventTypes } from '@advanced-rest-client/arc-events';
 import { DataGenerator, HeadersGenerator } from '@advanced-rest-client/arc-data-generator';
 import sinon from 'sinon';
+import { availableTabs } from '../src/ResponseViewElement.js';
 import '../response-view.js';
 
 /** @typedef {import('../index').ResponseViewElement} ResponseViewElement */
 /** @typedef {import('@advanced-rest-client/arc-types').ArcResponse.Response} Response */
+/** @typedef {import('@advanced-rest-client/arc-types').ArcResponse.ErrorResponse} ErrorResponse */
 /** @typedef {import('@advanced-rest-client/arc-types').ArcRequest.TransportRequest} TransportRequest */
+/** @typedef {import('@advanced-rest-client/arc-types').ArcRequest.ArcBaseRequest} ArcBaseRequest */
 
 describe('ResponseViewElement', () => {
   const generator = new DataGenerator();
@@ -19,19 +22,18 @@ describe('ResponseViewElement', () => {
   }
 
   /**
-   * @param {TransportRequest} request
-   * @param {Response} response
+   * @param {ArcBaseRequest} request
    * @returns {Promise<ResponseViewElement>}
    */
-  async function dataFixture(request, response) {
-    return fixture(html`<response-view .request="${request}" .response="${response}"></response-view>`);
+  async function dataFixture(request) {
+    return fixture(html`<response-view .request="${request}"></response-view>`);
   }
 
   /**
    * @returns {Promise<ResponseViewElement>}
    */
   async function autoFixture() {
-    const r = generator.generateHistoryObject();
+    const r = /** @type ArcBaseRequest */ (generator.generateHistoryObject());
     const request = /** @type TransportRequest */ ({
       url: r.url,
       method: r.method,
@@ -41,14 +43,16 @@ describe('ResponseViewElement', () => {
       headers: HeadersGenerator.generateHeaders('request'),
     });
     const response = generator.generateResponse({ timings: true, ssl: true, redirects: true,  });
-    return dataFixture(request, response);
+    r.transportRequest = request;
+    r.response = response;
+    return dataFixture(r);
   }
 
   /**
    * @returns {Promise<ResponseViewElement>}
    */
   async function responsePayloadFixture() {
-    const r = generator.generateHistoryObject();
+    const r = /** @type ArcBaseRequest */ (generator.generateHistoryObject());
     const request = /** @type TransportRequest */ ({
       url: r.url,
       method: r.method,
@@ -61,7 +65,9 @@ describe('ResponseViewElement', () => {
     if (!response.payload) {
       response.payload = 'test';
     }
-    return dataFixture(request, response);
+    r.transportRequest = request;
+    r.response = response;
+    return dataFixture(r);
   }
 
   function rand(length, current='') {
@@ -72,7 +78,7 @@ describe('ResponseViewElement', () => {
    * @returns {Promise<ResponseViewElement>}
    */
   async function responseSizeFixture(size=4089) {
-    const r = generator.generateHistoryObject();
+    const r = /** @type ArcBaseRequest */ (generator.generateHistoryObject());
     const request = /** @type TransportRequest */ ({
       url: r.url,
       method: r.method,
@@ -88,7 +94,9 @@ describe('ResponseViewElement', () => {
       response: size,
       request: request.httpMessage.length,
     };
-    return fixture(html`<response-view .request="${request}" .response="${response}" forceRawSize="1" warningResponseMaxSize="2"></response-view>`);
+    r.transportRequest = request;
+    r.response = response;
+    return fixture(html`<response-view .request="${r}" forceRawSize="1" warningResponseMaxSize="2"></response-view>`);
   }
 
   const allPanels = ['response', 'timings', 'headers', 'redirects', 'raw'];
@@ -295,6 +303,48 @@ describe('ResponseViewElement', () => {
     });
   });
 
+
+  describe('error rendering', () => {
+    it('renders the error message when error', async () => {
+      const r = /** @type ArcBaseRequest */ (generator.generateHistoryObject());
+      const request = /** @type TransportRequest */ ({
+        url: r.url,
+        method: r.method,
+        startTime: Date.now() - 1000,
+        endTime: Date.now(),
+        httpMessage: 'Not available',
+        headers: HeadersGenerator.generateHeaders('request'),
+      });
+      const response = generator.generateErrorResponse();
+      r.transportRequest = request;
+      r.response = response;
+      const element = await dataFixture(r);
+      const errorElement = element.shadowRoot.querySelector('response-error');
+      assert.ok(errorElement);
+    });
+
+    it('renders the response view when has error and a payload', async () => {
+      const r = /** @type ArcBaseRequest */ (generator.generateHistoryObject());
+      const request = /** @type TransportRequest */ ({
+        url: r.url,
+        method: r.method,
+        startTime: Date.now() - 1000,
+        endTime: Date.now(),
+        httpMessage: 'Not available',
+        headers: HeadersGenerator.generateHeaders('request'),
+      });
+      const response = generator.generateErrorResponse();
+      response.payload = 'test-body';
+      r.transportRequest = request;
+      r.response = response;
+      const element = await dataFixture(r);
+      const errorElement = element.shadowRoot.querySelector('response-error');
+      assert.notOk(errorElement, 'response-error is not rendered');
+      const bodyElement = element.shadowRoot.querySelector('response-body');
+      assert.ok(bodyElement, 'response-body is rendered');
+    });
+  });
+
   describe('Response rendering limits', () => {
     describe('Size limit warning message', () => {
       let element = /** @type ResponseViewElement */ (null);
@@ -406,7 +456,6 @@ describe('ResponseViewElement', () => {
       const button = /** @type HTMLElement */ (element.shadowRoot.querySelector('.clear-button'));
       button.click();
       assert.isUndefined(element.request, 'request is cleared');
-      assert.isUndefined(element.response, 'response is cleared');
     });
 
     it('renders an empty panel', async () => {
@@ -471,7 +520,7 @@ describe('ResponseViewElement', () => {
     });
 
     it('has the content type', () => {
-      element.response.headers = 'content-type: application/json';
+      element.request.response.headers = 'content-type: application/json';
       const spy = sinon.spy();
       element.addEventListener(DataExportEventTypes.fileSave, spy);
       const button = /** @type HTMLElement */ (element.shadowRoot.querySelector('anypoint-icon-item[data-id="save"]'));
@@ -481,7 +530,7 @@ describe('ResponseViewElement', () => {
     });
 
     it('has the default content type', () => {
-      element.response.headers = 'accept: application/json';
+      element.request.response.headers = 'accept: application/json';
       const spy = sinon.spy();
       element.addEventListener(DataExportEventTypes.fileSave, spy);
       const button = /** @type HTMLElement */ (element.shadowRoot.querySelector('anypoint-icon-item[data-id="save"]'));
@@ -491,13 +540,72 @@ describe('ResponseViewElement', () => {
     });
 
     it('has the file extension', () => {
-      element.response.headers = 'content-type: application/json';
+      element.request.response.headers = 'content-type: application/json';
       const spy = sinon.spy();
       element.addEventListener(DataExportEventTypes.fileSave, spy);
       const button = /** @type HTMLElement */ (element.shadowRoot.querySelector('anypoint-icon-item[data-id="save"]'));
       button.click();
       const { providerOptions } = spy.args[0][0];
       assert.include(providerOptions.file, '.json');
+    });
+
+    it('saves the response as HAR', async () => {
+      const button = /** @type HTMLElement */ (element.shadowRoot.querySelector('anypoint-icon-item[data-id="har"]'));
+      button.click();
+      const e = await oneEvent(element, DataExportEventTypes.fileSave);
+      // @ts-ignore
+      const { providerOptions, data } = e;
+      assert.typeOf(data, 'string', 'has the data on the event');
+      assert.equal(providerOptions.contentType, 'application/json', 'has the content type');
+      assert.equal(providerOptions.file, 'response-body.har', 'has the file name');
+    });
+  });
+
+  describe('#types', () => {
+    let element = /** @type ResponseViewElement */ (null);
+    beforeEach(async () => { element = await autoFixture(); } );
+
+    it('has the default list of panels', () => {
+      assert.deepEqual(element.effectivePanels, availableTabs);
+    });
+
+    it('renders all tab options by default', () => {
+      const nodes = element.shadowRoot.querySelectorAll('.tabs-menu anypoint-item');
+      assert.lengthOf(nodes, 5);
+    });
+
+    it('computes a single panel option', () => {
+      element.types = 'timings';
+      assert.lengthOf(element.effectivePanels, 1, 'has single effectivePanel');
+      assert.equal(element.effectivePanels[0].id, 'timings');
+    });
+
+    it('renders a single tab option', async () => {
+      element.types = 'timings';
+      await nextFrame();
+      const nodes = element.shadowRoot.querySelectorAll('.tabs-menu anypoint-item');
+      assert.lengthOf(nodes, 1);
+    });
+
+    it('computes a multi panel option', () => {
+      element.types = 'timings,headers';
+      assert.lengthOf(element.effectivePanels, 2, 'has 2 effectivePanels');
+      assert.equal(element.effectivePanels[0].id, 'timings');
+      assert.equal(element.effectivePanels[1].id, 'headers');
+    });
+
+    it('renders a single tab option', async () => {
+      element.types = 'timings,headers';
+      await nextFrame();
+      const nodes = element.shadowRoot.querySelectorAll('.tabs-menu anypoint-item');
+      assert.lengthOf(nodes, 2);
+    });
+
+    it('ignores invalid options', () => {
+      element.types = 'timings,some,headers';
+      assert.lengthOf(element.effectivePanels, 2, 'has 2 effectivePanels');
+      assert.equal(element.effectivePanels[0].id, 'timings');
+      assert.equal(element.effectivePanels[1].id, 'headers');
     });
   });
 
@@ -597,7 +705,7 @@ describe('ResponseViewElement', () => {
 
       it('passes automated test', async () => {
         await assert.isAccessible(element, {
-          ignoredRules: ['color-contrast']
+          ignoredRules: ['color-contrast' , 'aria-allowed-attr']
         });
       });
     });

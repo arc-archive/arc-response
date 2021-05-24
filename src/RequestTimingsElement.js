@@ -41,7 +41,7 @@ import {
  * An element to render request timings data according to the HAR 1.2 spec.
  */
 export class RequestTimingsElement extends LitElement {
-  static get styles() {
+  get styles() {
     return elementStyles;
   }
 
@@ -242,6 +242,7 @@ export class RequestTimingsElement extends LitElement {
     const receive2ProgressValue = this[computeSum](receiveProgressValue, receive);
 
     return html`
+    <style>${this.styles}</style>
     ${this[startTimeTemplate](time)}
     ${this[timingRowTemplate]('Queueing:', 'Queueing time', 0, fullTime, blocked, blocked, 'blocked')}
     ${this[timingRowTemplate]('DNS Lookup:', 'DNS lookup time', blockedProgressValue, fullTime, ttcProgressValue, dns, 'dns')}

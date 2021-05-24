@@ -5,6 +5,9 @@ import '@anypoint-web-components/anypoint-switch/anypoint-switch.js';
 import '../request-timings.js';
 import '../request-timings-panel.js';
 
+/** @typedef {import('@advanced-rest-client/arc-types').ArcResponse.RequestTime} RequestTime */
+/** @typedef {import('@advanced-rest-client/arc-types').ArcResponse.ResponseRedirect} ResponseRedirect */
+
 class ComponentPage extends DemoPage {
   constructor() {
     super();
@@ -18,50 +21,76 @@ class ComponentPage extends DemoPage {
     this.minimal = false;
   }
 
+  /**
+   * @type {RequestTime}
+   */
   get fullTimings() {
     return {
-      startTime: 1483368432132,
       blocked: 7.75,
-      dns: 279.38,
       connect: 883.12,
+      dns: 279.38,
+      receive: 1.71,
       ssl: 633.05,
       send: 0.29,
       wait: 649.88,
-      receive: 1.71
+
+      // startTime: 1483368432132,
     };
   }
 
+  /**
+   * @type {RequestTime}
+   */
   get minimalTimings() {
     return {
-      startTime: 1601862918077,
+      // startTime: 1601862918077,
       connect: 883.12,
       send: 0.29,
       wait: 649.88,
-      receive: 1.71
+      receive: 1.71,
+      blocked: -1,
+      dns: -1,
     };
   }
 
+  /**
+   * @type {ResponseRedirect[]}
+   */
   get redirectTimings() {
     return [
       {
-        startTime: '2017-01-02T16:22:26.212Z',
-        blocked: 10.697000019718,
-        dns: -1,
-        connect: -1,
-        send: 0.34099997719749986,
-        wait: 155.50400002393852,
-        receive: 4.751000029500744,
-        ssl: -1
+        startTime: 1483374146212,
+        endTime: 1483374146712,
+        url: 'https://redirect.com/1',
+        response: {
+          status: 301,
+        },
+        timings: {
+          blocked: 10.697000019718,
+          dns: -1,
+          connect: -1,
+          send: 0.34099997719749986,
+          wait: 155.50400002393852,
+          receive: 4.751000029500744,
+          ssl: -1
+        },
       },
       {
-        startTime: '2017-01-02T16:22:26.212Z',
-        blocked: 3.36500001139939,
-        dns: -1,
-        connect: -1,
-        send: 0.06499997107311994,
-        wait: 138.7439999962225,
-        receive: 4.986000014469084,
-        ssl: -1
+        startTime: 1483374147212,
+        endTime: 1483374147712,
+        url: 'https://redirect.com/2',
+        response: {
+          status: 307,
+        },
+        timings: {
+          blocked: 3.36500001139939,
+          dns: -1,
+          connect: -1,
+          send: 0.06499997107311994,
+          wait: 138.7439999962225,
+          receive: 4.986000014469084,
+          ssl: -1
+        }
       }
     ];
   }

@@ -4,7 +4,7 @@ A module containing the UI regions and the logic to render and support HTTP resp
 
 [![Published on NPM](https://img.shields.io/npm/v/@advanced-rest-client/arc-response.svg)](https://www.npmjs.com/package/@advanced-rest-client/arc-response)
 
-![example workflow name](https://github.com/advanced-rest-client/arc-response/workflows/tests/badge.svg)
+[![Tests and publishing](https://github.com/advanced-rest-client/arc-response/actions/workflows/deployment.yml/badge.svg)](https://github.com/advanced-rest-client/arc-response/actions/workflows/deployment.yml)
 
 ## Usage
 
@@ -36,7 +36,7 @@ customElements.define('sample-element', SampleElement);
 
 ## response-view
 
-The main response view for the Advanced REST Client. It takes `request` and `response` set on the element to generate the view from the data.
+The main response view for the Advanced REST Client. It takes the ARC `request` object with the transport request data and the response data set on the element to generate the view from the data.
 The request and response objects types are defined in [arc-types](https://github.com/advanced-rest-client/arc-types) as `ArcRequest.TransportRequest` and `ArcResponse.Response`.
 
 ## response-body

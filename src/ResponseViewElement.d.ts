@@ -15,6 +15,8 @@ import {
   tabContentTemplate,
   tabTemplate,
   responseTemplate,
+  responseMetaTemplate,
+  responsePrefixTemplate,
   detailsTemplate,
   unknownTemplate,
   timingsTemplate,
@@ -23,6 +25,7 @@ import {
   loadingTimeTemplate,
   responseSizeTemplate,
   responseOptionsTemplate,
+  responseOptionsItemsTemplate,
   responseBodyTemplate,
   errorResponse,
   requestHeadersTemplate,
@@ -36,7 +39,19 @@ import {
   copyResponseClipboard,
   redirectLinkHandler,
   tabsKeyDownHandler,
-} from './internals.js';
+  responseValue,
+  responseSizeValue,
+  computeResponseSize,
+  computeResponseLimits,
+  sizeWarningLimitTriggered,
+  sizeRawLimitTriggered,
+  sizeWarningTemplate,
+  clearSizeWarning,
+  rawTemplate,
+  typesValue,
+  computeEffectiveTypes,
+  effectiveTypesValue,
+} from './internals';
 
 export declare interface ResponsePanel {
   id: string;
@@ -51,16 +66,13 @@ export const availableTabs: ResponsePanel[];
  * @fires clear Dispatched when the user press the `clear` button.
  */
 export declare class ResponseViewElement extends LitElement {
-  static readonly styles: CSSResult;
+  get styles(): CSSResult | CSSResult[];
 
-  /**
-   * ARC HTTP response object
-   */
-  response: ArcResponse.Response | ArcResponse.ErrorResponse;
+  [responseValue]: ArcResponse.Response | ArcResponse.ErrorResponse;
   /** 
    * ARC HTTP request object
    */
-  request: ArcRequest.TransportRequest;
+  request: ArcRequest.ArcBaseRequest;
   /** 
    * A list of active panels (in order) rendered in the tabs.
    */
@@ -74,7 +86,7 @@ export declare class ResponseViewElement extends LitElement {
    * Adds a compatibility with Anypoint styling
    * @attribute
    */
-  compatibility: string;
+  compatibility: boolean;
   /**
    * The size of a response that triggers "raw" view by default.
    * @attribute
@@ -89,10 +101,28 @@ export declare class ResponseViewElement extends LitElement {
   /**
    * Tests whether the response is set
    */
-  readonly hasResponse: boolean;
+  get hasResponse(): boolean;
+
+  /** 
+   * The list of coma separated names of the editors to enable.
+   * This must be the list of `id` values from the available editors.
+   * Possible values: `response,timings,headers,redirects,raw`
+   * @attribute
+   */
+  types?: string;
+  [typesValue]: string;
+  /**
+   * @returns {ResponsePanel[]} The final list of panels to render.
+   */
+  get effectivePanels(): ResponsePanel[];
+  [effectiveTypesValue]: ResponsePanel[];
 
   [selectedTab]: string;
   [openedTabs]: string[];
+
+  [responseSizeValue]?: number;
+  [sizeWarningLimitTriggered]: boolean;
+  [sizeRawLimitTriggered]: boolean;
 
   constructor();
 
@@ -153,6 +183,22 @@ export declare class ResponseViewElement extends LitElement {
    */
   [redirectLinkHandler](e: CustomEvent): void;
 
+  [computeResponseSize](response: ArcResponse.Response): number|undefined;
+
+  /**
+   * Computes variables responsible for rendering response size warnings.
+   * @param size The response size
+   */
+  [computeResponseLimits](size: number): void;
+
+  [clearSizeWarning](): void;
+
+  /**
+   * Handles the change to the `enabledEditors` property and, when set, computes a list of
+   * editors to enable in the view. The resulted list of a sublist of the `editorTypes` list.
+   */
+  [computeEffectiveTypes](list: string): ResponsePanel[]|undefined;
+
   render(): TemplateResult;
 
   [responseTabsTemplate](): TemplateResult;
@@ -195,6 +241,16 @@ export declare class ResponseViewElement extends LitElement {
   [responseTemplate](id: string, opened: boolean): TemplateResult|string;
 
   /**
+   * @returns A template for the response meta data row
+   */
+  [responseMetaTemplate](): TemplateResult;
+
+  /**
+   * @returns A template for child classes to insert content between the response meta row and the response view.
+   */
+  [responsePrefixTemplate](): TemplateResult|string;
+
+  /**
    * @param opened Whether the panel is currently rendered in the view
    * @returns A template for the headers panel.
    */
@@ -220,6 +276,13 @@ export declare class ResponseViewElement extends LitElement {
    * @returns A detailed information about redirects
    */
   [redirectsTemplate](id: string, opened: boolean): TemplateResult|string;
+
+  /**
+   * @param id The id of the panel
+   * @param opened Whether the panel is currently rendered in the view
+   * @returns A detailed information about redirects
+   */
+  [rawTemplate](id: string, opened: boolean): TemplateResult|string;
 
   /**
    * @param opened Whether the template is currently rendered
@@ -253,9 +316,14 @@ export declare class ResponseViewElement extends LitElement {
   [responseSizeTemplate](size: ArcResponse.RequestsSize): TemplateResult|string;
 
   /**
-   * @returns A template for response options drop down
+   * @returns A template for the response options drop down
    */
   [responseOptionsTemplate](): TemplateResult;
+
+  /**
+   * @returns A template for the response options items
+   */
+  [responseOptionsItemsTemplate](): TemplateResult;
 
   /**
    * @param payload The response payload
@@ -264,6 +332,8 @@ export declare class ResponseViewElement extends LitElement {
    * @returns Template for the response preview
    */
   [responseBodyTemplate](payload: string|Buffer|ArrayBuffer, headers: string, opened: boolean): TemplateResult;
+
+  [sizeWarningTemplate](): TemplateResult;
 
   /**
    * @returns Template for the error response
