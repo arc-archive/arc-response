@@ -24,7 +24,7 @@ import '@anypoint-web-components/anypoint-button/anypoint-icon-button.js';
 import '@anypoint-web-components/anypoint-button/anypoint-button.js';
 import '@advanced-rest-client/arc-headers/headers-list.js';
 import { ExportEvents, WorkspaceEvents } from '@advanced-rest-client/arc-events';
-import { HarTransformer } from '@advanced-rest-client/arc-models';
+import { HarTransformer } from '@api-client/har';
 import elementStyles from './styles/ResponseView.styles.js';
 import { bytesToSize, readContentType, readBodyString } from './Utils.js';
 import { MimeTypes } from './lib/MimeTypes.js';
@@ -223,21 +223,6 @@ export class ResponseViewElement extends LitElement {
     }
     this[selectedTab] = value;
   }
-
-  // get response() {
-  //   return this[responseValue];
-  // }
-
-  // set response(value) {
-  //   const old = this[responseValue];
-  //   if (old === value) {
-  //     return;
-  //   }
-  //   this[responseValue] = value;
-  //   this[responseSizeValue] = this[computeResponseSize](value);
-  //   this[computeResponseLimits](this[responseSizeValue]);
-  //   this.requestUpdate();
-  // }
 
   /**
    * @returns {ArcBaseRequest}
@@ -538,8 +523,12 @@ export class ResponseViewElement extends LitElement {
     const { request } = this;
     const transformer = new HarTransformer();
     const result = await transformer.transform([request]);
-    // eslint-disable-next-line no-console
-    console.log(result);
+    const data = JSON.stringify(result);
+    const file = `response-body.har`;
+    ExportEvents.fileSave(this, data, {
+      contentType: 'application/json',
+      file,
+    });
   }
 
   /**

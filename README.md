@@ -36,7 +36,7 @@ customElements.define('sample-element', SampleElement);
 
 ## response-view
 
-The main response view for the Advanced REST Client. It takes `request` and `response` set on the element to generate the view from the data.
+The main response view for the Advanced REST Client. It takes the ARC `request` object with the transport request data and the response data set on the element to generate the view from the data.
 The request and response objects types are defined in [arc-types](https://github.com/advanced-rest-client/arc-types) as `ArcRequest.TransportRequest` and `ArcResponse.Response`.
 
 ## response-body
