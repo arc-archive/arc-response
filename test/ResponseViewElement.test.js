@@ -705,7 +705,7 @@ describe('ResponseViewElement', () => {
 
       it('passes automated test', async () => {
         await assert.isAccessible(element, {
-          ignoredRules: ['color-contrast']
+          ignoredRules: ['color-contrast' , 'aria-allowed-attr']
         });
       });
     });
