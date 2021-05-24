@@ -4,7 +4,7 @@ A module containing the UI regions and the logic to render and support HTTP resp
 
 [![Published on NPM](https://img.shields.io/npm/v/@advanced-rest-client/arc-response.svg)](https://www.npmjs.com/package/@advanced-rest-client/arc-response)
 
-![example workflow name](https://github.com/advanced-rest-client/arc-response/workflows/tests/badge.svg)
+[![Tests and publishing](https://github.com/advanced-rest-client/arc-response/actions/workflows/deployment.yml/badge.svg)](https://github.com/advanced-rest-client/arc-response/actions/workflows/deployment.yml)
 
 ## Usage
 
