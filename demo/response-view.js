@@ -202,13 +202,14 @@ class ComponentPage extends DemoPage {
       forceRawSize,
       warningResponseMaxSize,
     } = this;
-    console.log(request);
+    const response = request && request.response;
     return html`
     <section class="documentation-section">
       <h3>Interactive demo</h3>
       <response-view
         slot="content"
         .request="${request}"
+        .response="${response}"
         .selected="${selected}"
         .active="${panels}"
         .forceRawSize="${forceRawSize}"

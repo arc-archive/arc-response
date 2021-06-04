@@ -72,8 +72,7 @@ import {
   redirectLinkHandler,
   tabsKeyDownHandler,
   responseValue,
-  requestValue,
-  requestChanged,
+  responseChanged,
   responseSizeValue,
   computeResponseSize,
   computeResponseLimits,
@@ -140,6 +139,12 @@ export class ResponseViewElement extends LitElement {
        * ARC HTTP request object
        */
       request: { type: Object },
+      /** 
+       * The received response object for the current request.
+       * Event though the `response` is part of the `request` it needs to be set separately
+       * to properly process the values in the request panel.
+       */
+      response: { type: Object },
       /** 
        * A list of active panels (in order) rendered in the tabs.
        */
@@ -225,22 +230,22 @@ export class ResponseViewElement extends LitElement {
   }
 
   /**
-   * @returns {ArcBaseRequest}
+   * @returns {Response | ErrorResponse}
    */
-  get request() {
-    return this[requestValue];
+  get response() {
+    return this[responseValue];
   }
 
   /**
-   * @param {ArcBaseRequest} value
+   * @param {Response | ErrorResponse} value
    */
-  set request(value) {
-    const old = this[requestValue];
+  set response(value) {
+    const old = this[responseValue];
     if (old === value) {
       return;
     }
-    this[requestValue] = value;
-    this[requestChanged](value);
+    this[responseValue] = value;
+    this[responseChanged](value);
   }
 
   get types() {
@@ -319,19 +324,12 @@ export class ResponseViewElement extends LitElement {
 
   /**
    * Called when the request object change. Sets up variables needed to render the view.
-   * @param {ArcBaseRequest} request
+   * @param {Response | ErrorResponse | undefined} response
    */
-  [requestChanged](request) {
+  [responseChanged](response) {
     this[responseSizeValue] = 0;
     this[computeResponseLimits](0);
-    this[responseValue] = undefined;
-    if (!request) {
-      this.requestUpdate();
-      return;
-    }
-    const { transportRequest, response } = request;
-    this[responseValue] = response;
-    if (!response || !transportRequest) {
+    if (!response) {
       this.requestUpdate();
       return;
     }
@@ -737,6 +735,9 @@ export class ResponseViewElement extends LitElement {
    */
   [responseTemplate](id, opened) {
     const info = /** @type Response */ (this[responseValue]);
+    if (!info) {
+      return '';
+    }
     const { payload, headers } = info;
     const typedError = /** @type ErrorResponse */ (this[responseValue]);
     const isError = !!typedError.error;
@@ -749,10 +750,13 @@ export class ResponseViewElement extends LitElement {
   }
 
   /**
-   * @returns {TemplateResult} A template for the response meta data row
+   * @returns {TemplateResult|string} A template for the response meta data row
    */
   [responseMetaTemplate]() {
     const info = /** @type Response */ (this[responseValue]);
+    if (!info) {
+      return '';
+    }
     const { status, statusText, loadingTime } = info;
     return html`
     <div class="response-meta">
@@ -889,10 +893,13 @@ export class ResponseViewElement extends LitElement {
   /**
    * @param {string} id The id of the panel
    * @param {boolean} opened Whether the template is currently rendered
-   * @returns {TemplateResult} A template for the request timings.
+   * @returns {TemplateResult|string} A template for the request timings.
    */
   [timingsTemplate](id, opened) {
     const info = /** @type Response */ (this[responseValue]);
+    if (!info) {
+      return '';
+    }
     const { redirects, timings } = info;
     if (!timings) {
       return html`

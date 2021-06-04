@@ -36,10 +36,12 @@ import {
   computeRedirectLocation,
   contentActionHandler,
   saveResponseFile,
+  saveResponseHar,
   copyResponseClipboard,
   redirectLinkHandler,
   tabsKeyDownHandler,
   responseValue,
+  responseChanged,
   responseSizeValue,
   computeResponseSize,
   computeResponseLimits,
@@ -73,6 +75,12 @@ export declare class ResponseViewElement extends LitElement {
    * ARC HTTP request object
    */
   request: ArcRequest.ArcBaseRequest;
+  /** 
+   * The received response object for the current request.
+   * Event though the `response` is part of the `request` it needs to be set separately
+   * to properly process the values in the request panel.
+   */
+  response: ArcResponse.Response | ArcResponse.ErrorResponse;
   /** 
    * A list of active panels (in order) rendered in the tabs.
    */
@@ -133,6 +141,11 @@ export declare class ResponseViewElement extends LitElement {
   [tabSelectHandler](e: CustomEvent): Promise<void>;
 
   /**
+   * Called when the request object change. Sets up variables needed to render the view.
+   */
+  [responseChanged](response: ArcResponse.Response | ArcResponse.ErrorResponse | undefined)
+
+  /**
    * A handler for the content action drop down item selection
    */
   [contentActionHandler](e: CustomEvent): Promise<void>;
@@ -177,6 +190,11 @@ export declare class ResponseViewElement extends LitElement {
    * Writes the current body to the clipboard
    */
   [copyResponseClipboard](): Promise<void>;
+
+  /**
+   * Transforms the request and the response to a HAR 1.2 format and saves as file.
+   */
+  [saveResponseHar](): Promise<void>;
 
   /**
    * A handler for the click event in the response panel

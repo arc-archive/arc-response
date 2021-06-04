@@ -146,6 +146,7 @@ describe('RequestTimingsPanelElement', () => {
       };
       element.redirects = [
         {
+          url: 'https://domain.com/1',
           timings: {
             blocked: 10.697000019718,
             dns: -1,
@@ -162,6 +163,7 @@ describe('RequestTimingsPanelElement', () => {
           endTime: 0,
         },
         {
+          url: 'https://domain.com/2',
           timings: {
             blocked: 3.36500001139939,
             dns: -1,
@@ -214,6 +216,7 @@ describe('RequestTimingsPanelElement', () => {
       };
       element.redirects = [
         {
+          url: 'https://domain.com/1',
           timings: {
             blocked: 10.697000019718,
             dns: -1,
@@ -230,6 +233,7 @@ describe('RequestTimingsPanelElement', () => {
           endTime: 0,
         },
         {
+          url: 'https://domain.com/2',
           timings: {
             blocked: 3.36500001139939,
             dns: -1,

@@ -26,7 +26,7 @@ describe('ResponseViewElement', () => {
    * @returns {Promise<ResponseViewElement>}
    */
   async function dataFixture(request) {
-    return fixture(html`<response-view .request="${request}"></response-view>`);
+    return fixture(html`<response-view .request="${request}" .response="${request && request.response}"></response-view>`);
   }
 
   /**
@@ -96,7 +96,7 @@ describe('ResponseViewElement', () => {
     };
     r.transportRequest = request;
     r.response = response;
-    return fixture(html`<response-view .request="${r}" forceRawSize="1" warningResponseMaxSize="2"></response-view>`);
+    return fixture(html`<response-view .request="${r}" .response="${response}" forceRawSize="1" warningResponseMaxSize="2"></response-view>`);
   }
 
   const allPanels = ['response', 'timings', 'headers', 'redirects', 'raw'];
