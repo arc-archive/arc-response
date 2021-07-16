@@ -176,7 +176,7 @@ export class ResponseBodyElement extends LitElement {
     this[availableTypes] = types;
     this[selectedType] = selected;
     this[imageDataUrlValue] = imageDataUrl;
-    if (types.includes('parsed')) {
+    if (types.includes('parsed') || types.includes('binary')) {
       this[rawValue] = readBodyString(body, charset);
     } else {
       this[rawValue] = body;
@@ -227,6 +227,9 @@ export class ResponseBodyElement extends LitElement {
       return this[parsedTemplate]();
     }
     if (selected === 'binary') {
+      if (this.rawOnly) {
+        return this[rawTemplate]();
+      }
       return this[binaryTemplate]();
     }
     if (selected === 'svg') {
