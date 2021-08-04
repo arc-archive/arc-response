@@ -51,7 +51,7 @@ describe('ResponseViewElement', () => {
   /**
    * @returns {Promise<ResponseViewElement>}
    */
-  async function responsePayloadFixture() {
+  async function responsePayloadFixture(responseMeta) {
     const r = /** @type ArcBaseRequest */ (generator.generateHistoryObject());
     const request = /** @type TransportRequest */ ({
       url: r.url,
@@ -67,6 +67,12 @@ describe('ResponseViewElement', () => {
     }
     r.transportRequest = request;
     r.response = response;
+    if (responseMeta) {
+      const {loadingTime, status, statusText} = responseMeta
+      r.response.loadingTime = loadingTime;
+      r.response.status = status;
+      r.response.statusText = statusText;
+    }
     return dataFixture(r);
   }
 
@@ -708,6 +714,43 @@ describe('ResponseViewElement', () => {
           ignoredRules: ['color-contrast' , 'aria-allowed-attr']
         });
       });
+    });
+  });
+
+  describe('response meta rendering', () => {
+    let element = /** @type ResponseViewElement */ (null);
+    beforeEach(async () => {
+      const responseMeta = {loadingTime: 2489.42342111, status: 200, statusText: 'ok'}
+      element = await responsePayloadFixture(responseMeta);
+    } );
+
+    it('renders response meta', async () => {
+      const responseMeta = element.shadowRoot.querySelector('.response-meta');
+      assert.ok(responseMeta, 'has response meta');
+    });
+
+    it('renders status', async () => {
+      const statusContainer = element.shadowRoot.querySelector('.status-line');
+      assert.ok(statusContainer, 'has status');
+    });
+
+    it('renders status code', async () => {
+      const status = element.shadowRoot.querySelector('.code');
+      assert.ok(status, 'has status code');
+      assert.equal(status.innerText, '200');
+    });
+
+    it('renders status msg', async () => {
+      const status = element.shadowRoot.querySelector('.status-line .message');
+      assert.ok(status, 'has status msg');
+      assert.equal(status.innerText, 'ok');
+    });
+
+    it('renders loading time', async () => {
+      const time = element.shadowRoot.querySelector('.loading-time-label');
+      assert.ok(time, 'has status msg');
+      debugger
+      assert.equal(time.innerText, 'Time: 2489.42342 ms');
     });
   });
 });

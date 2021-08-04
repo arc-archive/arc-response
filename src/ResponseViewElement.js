@@ -951,7 +951,15 @@ export class ResponseViewElement extends LitElement {
     if (Number.isNaN(value)) {
       return '';
     }
-    return html`<span class="loading-time-label">Time: ${value || 0} ms</span>`;
+
+    let time = value || 0
+    if (!Number.isInteger(time)) {
+      const [, decimal] = time.toString().split('.');
+      const maxDecimalLength = Math.min(decimal.length, 5);
+      time = parseFloat(time.toFixed(maxDecimalLength));
+    }
+
+    return html`<span class="loading-time-label">Time: ${time} ms</span>`;
   }
 
   /**
