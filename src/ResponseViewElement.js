@@ -183,7 +183,7 @@ export class ResponseViewElement extends LitElement {
     if (!request) {
       return false;
     }
-    const { response } = request;
+    const { response } = this;
     return !!response;
   }
 
