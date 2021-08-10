@@ -753,4 +753,37 @@ describe('ResponseViewElement', () => {
       assert.equal(time.innerText, 'Time: 2489.42342 ms');
     });
   });
+
+  describe('get hasResponse', () => {
+    let element = /** @type ResponseViewElement */ (null);
+    beforeEach(async () => { 
+      element = await basicFixture();
+      await nextFrame();
+    });
+
+    it('should return false if there is a response but no request', () => {
+      // @ts-ignore
+      element.response = {};
+      assert.isFalse(element.hasResponse);
+    });
+
+    it('should return false if there is no response and no request', () => {
+      // @ts-ignore
+      assert.isFalse(element.hasResponse);
+    });
+
+    it('should return false if there is a request but no response', () => {
+      // @ts-ignore
+      element.request = {};
+      assert.isFalse(element.hasResponse);
+    });
+
+    it('should return true if there is a request and response', () => {
+      // @ts-ignore
+      element.request = {};
+      // @ts-ignore
+      element.response = {};
+      assert.isTrue(element.hasResponse);
+    });
+  });
 });

@@ -179,11 +179,10 @@ export class ResponseViewElement extends LitElement {
    * @returns {boolean} Tests whether the response is set
    */
   get hasResponse() {
-    const { request } = this;
+    const { request, response } = this;
     if (!request) {
       return false;
     }
-    const { response } = request;
     return !!response;
   }
 
