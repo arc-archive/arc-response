@@ -4,7 +4,7 @@ import '@advanced-rest-client/arc-demo-helper/arc-interactive-demo.js';
 import '@anypoint-web-components/anypoint-switch/anypoint-switch.js';
 import { HeadersParser } from '@advanced-rest-client/arc-headers';
 import { DataExportEventTypes, UiEventTypes } from '@advanced-rest-client/arc-events';
-import { DataGenerator, HeadersGenerator } from '@advanced-rest-client/arc-data-generator';
+import { ArcMock } from '@advanced-rest-client/arc-data-generator';
 import '../response-view.js';
 
 /** @typedef {import('@advanced-rest-client/arc-types').ArcResponse.Response} Response */
@@ -33,7 +33,7 @@ class ComponentPage extends DemoPage {
     this.selected = undefined;
     this.forceRawSize = 4096;
     this.warningResponseMaxSize = 2048;
-    this.generator = new DataGenerator();
+    this.generator = new ArcMock();
 
     this.restoreLocal();
 
@@ -164,16 +164,16 @@ class ComponentPage extends DemoPage {
   }
 
   generateRequest() {
-    const r = /** @type ArcBaseRequest */ (this.generator.generateHistoryObject());
+    const r = this.generator.http.history();
     const tr = /** @type TransportRequest */ ({
       url: r.url,
       method: r.method,
       startTime: Date.now() - 1000,
       endTime: Date.now(),
       httpMessage: 'Not available',
-      headers: HeadersGenerator.generateHeaders('request'),
+      headers: this.generator.http.headers.headers('request'),
     });
-    const response = this.generator.generateResponse({ timings: true, ssl: true, redirects: true });
+    const response = this.generator.http.response.arcResponse({ timings: true, ssl: true, redirects: true });
     r.transportRequest = tr;
     r.response = response;
     this.request = r;

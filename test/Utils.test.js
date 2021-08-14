@@ -1,10 +1,12 @@
-import { HeadersGenerator } from '@advanced-rest-client/arc-data-generator';
+import { ArcMock } from '@advanced-rest-client/arc-data-generator';
 import { assert } from '@open-wc/testing';
 import { bytesToSize, readBodyString, computeCharset, readContentType } from '../src/Utils.js';
 
 const hasTextEncoder = typeof TextEncoder !== 'undefined';
 
 describe('Utils', () => {
+  const generator = new ArcMock();
+
   describe('bytesToSize()', () => {
     it('returns value for 0', () => {
       const result = bytesToSize(0);
@@ -125,14 +127,14 @@ describe('Utils', () => {
 
   describe('readContentType()', () => {
     it('returns the content type only', () => {
-      const headers = HeadersGenerator.generateHeaders('response', 'application/json');
+      const headers = generator.http.headers.headers('response', { mime: 'application/json' });
       const [ct, mime] = readContentType(headers);
       assert.equal(ct, 'application/json');
       assert.isUndefined(mime);
     });
 
     it('returns the content type and the charset', () => {
-      const headers = HeadersGenerator.generateHeaders('response', 'application/json; charset=utf-8');
+      const headers = generator.http.headers.headers('response', { mime: 'application/json; charset=utf-8' });
       const [ct, mime] = readContentType(headers);
       assert.equal(ct, 'application/json');
       assert.equal(mime, 'utf-8');

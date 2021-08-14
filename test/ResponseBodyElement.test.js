@@ -1,6 +1,6 @@
 /* eslint-disable no-plusplus */
 import { fixture, assert, aTimeout, html } from '@open-wc/testing';
-import { HeadersGenerator } from '@advanced-rest-client/arc-data-generator';
+import { ArcMock } from '@advanced-rest-client/arc-data-generator';
 import sinon from 'sinon';
 import '../response-body.js';
 import {
@@ -34,12 +34,13 @@ function str2ab(str) {
 /** @typedef {import('../index').ResponseBodyElement} ResponseBodyElement */
 
 describe('ResponseBodyElement', () => {
+  const generator = new ArcMock();
   /**
    * @returns {Promise<ResponseBodyElement>}
    */
   async function svgFixture() {
     const body = '<svg><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"></path></svg>';
-    const headers = HeadersGenerator.generateHeaders('response', 'image/svg+xml');
+    const headers = generator.http.headers.headers('response', { mime: 'image/svg+xml' });
     return fixture(html`<response-body .body="${body}" .headers="${headers}"></response-body>`);
   }
 
@@ -48,7 +49,7 @@ describe('ResponseBodyElement', () => {
    */
   async function evilSvgFixture() {
     const body = '<svg><path onclick="alert()" d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"></path><script>alert()</script><a xlink:href="test"></a></svg>';
-    const headers = HeadersGenerator.generateHeaders('response', 'image/svg+xml');
+    const headers = generator.http.headers.headers('response', { mime: 'image/svg+xml' });
     return fixture(html`<response-body .body="${body}" .headers="${headers}"></response-body>`);
   }
 
@@ -57,7 +58,7 @@ describe('ResponseBodyElement', () => {
    */
   async function pngFixture() {
     const body = base64ToArrayBuffer(PNG);
-    const headers = HeadersGenerator.generateHeaders('response', 'image/png');
+    const headers = generator.http.headers.headers('response', { mime: 'image/png' });
     return fixture(html`<response-body .body="${body}" .headers="${headers}"></response-body>`);
   }
 
@@ -66,7 +67,7 @@ describe('ResponseBodyElement', () => {
    */
   async function pdfFixture() {
     const body = base64ToArrayBuffer(PDF);
-    const headers = HeadersGenerator.generateHeaders('response', 'application/pdf');
+    const headers = generator.http.headers.headers('response', { mime: 'application/pdf' });
     return fixture(html`<response-body .body="${body}" .headers="${headers}"></response-body>`);
   }
 
@@ -75,7 +76,7 @@ describe('ResponseBodyElement', () => {
    */
   async function binaryFixture() {
     const body = base64ToArrayBuffer(BINARY);
-    const headers = HeadersGenerator.generateHeaders('response', 'application/octet-stream');
+    const headers = generator.http.headers.headers('response', { mime: 'application/octet-stream' });
     return fixture(html`<response-body .body="${body}" .headers="${headers}"></response-body>`);
   }
 
@@ -83,7 +84,7 @@ describe('ResponseBodyElement', () => {
    * @returns {Promise<ResponseBodyElement>}
    */
   async function emptyFixture() {
-    const headers = HeadersGenerator.generateHeaders('response', 'application/octet-stream');
+    const headers = generator.http.headers.headers('response', { mime: 'application/octet-stream' });
     return fixture(html`<response-body .headers="${headers}"></response-body>`);
   }
 
@@ -92,7 +93,7 @@ describe('ResponseBodyElement', () => {
    */
   async function jsonFixture() {
     const body = str2ab('{"test": true}');
-    const headers = HeadersGenerator.generateHeaders('response', 'application/json');
+    const headers = generator.http.headers.headers('response', { mime: 'application/json' });
     return fixture(html`<response-body .body="${body}" .headers="${headers}"></response-body>`);
   }
 
@@ -101,7 +102,7 @@ describe('ResponseBodyElement', () => {
    */
   async function rawOnlyFixture() {
     const body = str2ab('{"test": true}');
-    const headers = HeadersGenerator.generateHeaders('response', 'application/json');
+    const headers = generator.http.headers.headers('response', { mime: 'application/json' });
     return fixture(html`<response-body .body="${body}" .headers="${headers}" rawOnly></response-body>`);
   }
 

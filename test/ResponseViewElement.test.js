@@ -1,7 +1,7 @@
 /* eslint-disable no-param-reassign */
 import { fixture, assert, html, nextFrame, oneEvent } from '@open-wc/testing';
 import { DataExportEventTypes, WorkspaceEventTypes } from '@advanced-rest-client/arc-events';
-import { DataGenerator, HeadersGenerator } from '@advanced-rest-client/arc-data-generator';
+import { ArcMock } from '@advanced-rest-client/arc-data-generator';
 import sinon from 'sinon';
 import { availableTabs } from '../src/ResponseViewElement.js';
 import '../response-view.js';
@@ -13,7 +13,7 @@ import '../response-view.js';
 /** @typedef {import('@advanced-rest-client/arc-types').ArcRequest.ArcBaseRequest} ArcBaseRequest */
 
 describe('ResponseViewElement', () => {
-  const generator = new DataGenerator();
+  const generator = new ArcMock();
   /**
    * @returns {Promise<ResponseViewElement>}
    */
@@ -33,16 +33,16 @@ describe('ResponseViewElement', () => {
    * @returns {Promise<ResponseViewElement>}
    */
   async function autoFixture() {
-    const r = /** @type ArcBaseRequest */ (generator.generateHistoryObject());
+    const r = generator.http.history();
     const request = /** @type TransportRequest */ ({
       url: r.url,
       method: r.method,
       startTime: Date.now() - 1000,
       endTime: Date.now(),
       httpMessage: 'Not available',
-      headers: HeadersGenerator.generateHeaders('request'),
+      headers: generator.http.headers.headers('request'),
     });
-    const response = generator.generateResponse({ timings: true, ssl: true, redirects: true,  });
+    const response = generator.http.response.arcResponse({ timings: true, ssl: true, redirects: true,  });
     r.transportRequest = request;
     r.response = response;
     return dataFixture(r);
@@ -52,16 +52,16 @@ describe('ResponseViewElement', () => {
    * @returns {Promise<ResponseViewElement>}
    */
   async function responsePayloadFixture(responseMeta) {
-    const r = /** @type ArcBaseRequest */ (generator.generateHistoryObject());
+    const r = generator.http.history();
     const request = /** @type TransportRequest */ ({
       url: r.url,
       method: r.method,
       startTime: Date.now() - 1000,
       endTime: Date.now(),
       httpMessage: 'Not available',
-      headers: HeadersGenerator.generateHeaders('request'),
+      headers: generator.http.headers.headers('request'),
     });
-    const response = generator.generateResponse({ timings: true, ssl: true, redirects: true });
+    const response = generator.http.response.arcResponse({ timings: true, ssl: true, redirects: true });
     if (!response.payload) {
       response.payload = 'test';
     }
@@ -84,16 +84,16 @@ describe('ResponseViewElement', () => {
    * @returns {Promise<ResponseViewElement>}
    */
   async function responseSizeFixture(size=4089) {
-    const r = /** @type ArcBaseRequest */ (generator.generateHistoryObject());
+    const r = generator.http.history();
     const request = /** @type TransportRequest */ ({
       url: r.url,
       method: r.method,
       startTime: Date.now() - 1000,
       endTime: Date.now(),
       httpMessage: 'Not available',
-      headers: HeadersGenerator.generateHeaders('request'),
+      headers: generator.http.headers.headers('request'),
     });
-    const response = generator.generateResponse({ timings: true, ssl: true, redirects: true });
+    const response = generator.http.response.arcResponse({ timings: true, ssl: true, redirects: true });
     const body = rand(size);
     response.payload = body;
     response.size = {
@@ -312,16 +312,16 @@ describe('ResponseViewElement', () => {
 
   describe('error rendering', () => {
     it('renders the error message when error', async () => {
-      const r = /** @type ArcBaseRequest */ (generator.generateHistoryObject());
+      const r = generator.http.history();
       const request = /** @type TransportRequest */ ({
         url: r.url,
         method: r.method,
         startTime: Date.now() - 1000,
         endTime: Date.now(),
         httpMessage: 'Not available',
-        headers: HeadersGenerator.generateHeaders('request'),
+        headers: generator.http.headers.headers('request'),
       });
-      const response = generator.generateErrorResponse();
+      const response = generator.http.response.arcErrorResponse();
       r.transportRequest = request;
       r.response = response;
       const element = await dataFixture(r);
@@ -330,16 +330,16 @@ describe('ResponseViewElement', () => {
     });
 
     it('renders the response view when has error and a payload', async () => {
-      const r = /** @type ArcBaseRequest */ (generator.generateHistoryObject());
+      const r = generator.http.history();
       const request = /** @type TransportRequest */ ({
         url: r.url,
         method: r.method,
         startTime: Date.now() - 1000,
         endTime: Date.now(),
         httpMessage: 'Not available',
-        headers: HeadersGenerator.generateHeaders('request'),
+        headers: generator.http.headers.headers('request'),
       });
-      const response = generator.generateErrorResponse();
+      const response = generator.http.response.arcErrorResponse();
       response.payload = 'test-body';
       r.transportRequest = request;
       r.response = response;
@@ -735,21 +735,20 @@ describe('ResponseViewElement', () => {
     });
 
     it('renders status code', async () => {
-      const status = element.shadowRoot.querySelector('.code');
+      const status = /** @type HTMLElement */ (element.shadowRoot.querySelector('.code'));
       assert.ok(status, 'has status code');
       assert.equal(status.innerText, '200');
     });
 
     it('renders status msg', async () => {
-      const status = element.shadowRoot.querySelector('.status-line .message');
+      const status = /** @type HTMLElement */ (element.shadowRoot.querySelector('.status-line .message'));
       assert.ok(status, 'has status msg');
       assert.equal(status.innerText, 'ok');
     });
 
     it('renders loading time', async () => {
-      const time = element.shadowRoot.querySelector('.loading-time-label');
+      const time = /** @type HTMLElement */ (element.shadowRoot.querySelector('.loading-time-label'));
       assert.ok(time, 'has status msg');
-      debugger
       assert.equal(time.innerText, 'Time: 2489.42342 ms');
     });
   });
