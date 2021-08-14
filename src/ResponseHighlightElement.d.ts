@@ -119,4 +119,8 @@ export class ResponseHighlightElement extends LitElement {
    * Formats the current code as JSON string and re-renders the view.
    */
   [formatJson](code: string): void;
+  /**
+   * Removes the `)]}',\n` from the code.
+   */
+  cleanJsonNp(code: string): string;
 }

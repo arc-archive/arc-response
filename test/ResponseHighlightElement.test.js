@@ -1,5 +1,5 @@
 import sinon from 'sinon';
-import { fixture, assert, aTimeout } from '@open-wc/testing';
+import { fixture, assert, aTimeout, html } from '@open-wc/testing';
 import { WorkspaceEventTypes, UiEventTypes } from '@advanced-rest-client/arc-events';
 import '../response-highlight.js';
 import { 
@@ -38,6 +38,14 @@ describe('ResponseHighlightElement', () => {
    */
   async function fullFixture() {
     return fixture(`<response-highlight lang="json" code='{"test": true}'></response-highlight>`);
+  }
+
+  /**
+   * @returns {Promise<ResponseHighlightElement>}
+   */
+  async function jsonNpFixture() {
+    const code = `)]}',\n{"test": true}`;
+    return fixture(html`<response-highlight lang="json" code=${code}></response-highlight>`);
   }
 
   const CRLF = /\r\n/g;
@@ -265,6 +273,26 @@ describe('ResponseHighlightElement', () => {
       assert.ok(detail.mouseEvent, 'has the original event');
       assert.equal(detail.selector, 'response-highlighter', 'has the "selector" property');
       assert.isTrue(detail.target === element, 'has the "target" property');
+    });
+  });
+
+  describe('JSON NP parsing', () => {
+    beforeEach(() => {
+      // @ts-ignore
+      Prism.plugins.matchBraces.resetIndex();
+    });
+    
+    it('renders json without the JSON vulnerability fix', async () => {
+      const element = await jsonNpFixture();
+      await aTimeout(0);
+      const compare =
+        '<code class="language- toggle-padding" id="output">' + 
+        '<span class="toggle-target opened" title="Toggle visibility" aria-label="Activate to toggle visibility of the lines"></span>' + 
+        '<span class="token punctuation brace-curly brace-open brace-level-1" id="pair-0-close" data-open="pair-0-open">{</span>' + 
+        '<span class="token property">"test"</span><span class="token operator">:</span> <span class="token boolean">true</span>' + 
+        '<span class="token punctuation brace-curly brace-close brace-level-1" id="pair-0-open" data-close="pair-0-close">}</span>' +
+        '</code>';
+      assert.dom.equal(element[outputElement], compare, { ignoreAttributes: ['aria-label'] });
     });
   });
 });

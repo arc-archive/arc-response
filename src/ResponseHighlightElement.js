@@ -228,6 +228,7 @@ export class ResponseHighlightElement extends LitElement {
     let body = code;
     if ((lang || '').includes('json')) {
       try {
+        body = this.cleanJsonNp(body);
         const parsed = JSON.parse(body);
         body = JSON.stringify(parsed, null, 2);
       } catch (e) {
@@ -363,9 +364,10 @@ export class ResponseHighlightElement extends LitElement {
    * Formats the current code as JSON string and re-renders the view.
    * @param {string} code
    */
-  [formatJson](code) {
+  [formatJson](code = '') {
+    const value = this.cleanJsonNp(code);
     try {
-      const parsed = JSON.parse(code);
+      const parsed = JSON.parse(value);
       const formatted = JSON.stringify(parsed, null, 2);
       const { lang } = this;
       this[tokenize](formatted, lang);
@@ -373,5 +375,20 @@ export class ResponseHighlightElement extends LitElement {
       // eslint-disable-next-line no-console
       console.error(e);
     }
+  }
+
+  /**
+   * Removes the `)]}',\n` from the code.
+   * @param {string} code
+   * @returns {string}
+   */
+  cleanJsonNp(code = '') {
+    let value = code.trim();
+    // https://github.com/advanced-rest-client/arc-electron/issues/197
+    if (value.startsWith(')]}\',')) {
+      value = value.substr(5);
+    }
+    value = value.trim();
+    return value;
   }
 }
