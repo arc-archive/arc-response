@@ -239,6 +239,7 @@ class ComponentPage extends DemoPage {
         <option value="json.json"></option>
         <option value="jsonnp.json"></option>
         <option value="api.zip"></option>
+        <option value="issue-181.json"></option>
         <option value="https://xd.adobe.com/view/46b6a75a-0dfd-44ff-87c1-e1b843d03911-13e5/"></option>
         <option value="${window.location.href}"></option>
         <option value="https://httpbin.org/brotli"></option>
