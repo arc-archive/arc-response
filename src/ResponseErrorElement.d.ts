@@ -12,6 +12,7 @@ import {
  * The element renders predefined error message with icon and depending on the
  * `message` property it renders custom message or a predefined explanation
  * if the message is one of the Chrome's network errors (net::*).
+ * @deprecated Use `@advanced-rest-client/app` instead.
  */
 export class ResponseErrorElement extends LitElement {
   get styles(): CSSResult;

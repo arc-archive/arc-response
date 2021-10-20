@@ -23,6 +23,9 @@ import {
 
 /** @typedef {import('lit-element').TemplateResult} TemplateResult */
 
+/**
+ * @deprecated Use `@advanced-rest-client/app` instead.
+ */
 export declare class ResponseBodyElement extends LitElement {
   get styles(): CSSResult;
 

@@ -4,6 +4,7 @@ import { readTimingValue, computeHarTime, computeRequestTime, redirectsTableTemp
 
 /**
  * An element to render a set of ARC HAR timings.
+ * @deprecated Use `@advanced-rest-client/app` instead.
  */
 export class RequestTimingsPanelElement extends LitElement {
   get styles(): CSSResult;

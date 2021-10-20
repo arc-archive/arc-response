@@ -19,6 +19,7 @@ import {
 
 /**
  * Response syntax highlighting via Prism
+ * @deprecated Use `@advanced-rest-client/app` instead.
  *
  */
 export class ResponseHighlightElement extends LitElement {

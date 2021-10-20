@@ -20,6 +20,7 @@ import {
 
 /**
  * An element to render request timings data according to the HAR 1.2 spec.
+ * @deprecated Use `@advanced-rest-client/app` instead.
  */
 export class RequestTimingsElement extends LitElement {
   get styles(): CSSResult;

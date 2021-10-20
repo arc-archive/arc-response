@@ -66,6 +66,7 @@ export const availableTabs: ResponsePanel[];
  * @fires activechange When a list of active panels change
  * @fires selectedchange When a list of active panels change
  * @fires clear Dispatched when the user press the `clear` button.
+ * @deprecated Use `@advanced-rest-client/app` instead.
  */
 export declare class ResponseViewElement extends LitElement {
   get styles(): CSSResult | CSSResult[];
