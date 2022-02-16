@@ -90,7 +90,7 @@ describe('ResponseHighlightElement', () => {
       await aTimeout(0);
       const compare =
         '<code class="language- toggle-padding" id="output">' + 
-        '<span class="toggle-target opened" title="Toggle visibility" aria-label="Activate to toggle visibility of the lines"></span>' + 
+        '<button class="toggle-target opened" title="Toggle visibility" aria-label="Activate to toggle visibility of the lines"></button>' + 
         '<span class="token punctuation brace-curly brace-open brace-level-1" id="pair-0-close" data-open="pair-0-open">{</span>' + 
         '<span class="token property">"test"</span><span class="token operator">:</span> <span class="token boolean">true</span>' + 
         '<span class="token punctuation brace-curly brace-close brace-level-1" id="pair-0-open" data-close="pair-0-close">}</span>' +
@@ -287,12 +287,36 @@ describe('ResponseHighlightElement', () => {
       await aTimeout(0);
       const compare =
         '<code class="language- toggle-padding" id="output">' + 
-        '<span class="toggle-target opened" title="Toggle visibility" aria-label="Activate to toggle visibility of the lines"></span>' + 
+        '<button class="toggle-target opened" title="Toggle visibility" aria-label="Activate to toggle visibility of the lines"></button>' + 
         '<span class="token punctuation brace-curly brace-open brace-level-1" id="pair-0-close" data-open="pair-0-open">{</span>' + 
         '<span class="token property">"test"</span><span class="token operator">:</span> <span class="token boolean">true</span>' + 
         '<span class="token punctuation brace-curly brace-close brace-level-1" id="pair-0-open" data-close="pair-0-close">}</span>' +
         '</code>';
       assert.dom.equal(element[outputElement], compare, { ignoreAttributes: ['aria-label'] });
+    });
+  });
+
+  describe('test toggle button in code viwer', () => {
+    beforeEach(() => {
+      // @ts-ignore
+      Prism.plugins.matchBraces.resetIndex();
+    });
+
+    it("should remove and add class on toggle button", async () => {
+      const element = await jsonNpFixture();
+      await aTimeout(0);
+      const button = /** @type HTMLElement */ (
+        element[outputElement].querySelector(".toggle-target")
+      );
+
+      // @ts-ignore
+      assert.equal(button.classList, "toggle-target opened");
+      button.click();
+      // @ts-ignore
+      assert.equal(button.classList, "toggle-target");
+      button.click();
+      // @ts-ignore
+      assert.equal(button.classList, "toggle-target opened");
     });
   });
 });
