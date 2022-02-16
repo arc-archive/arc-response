@@ -296,7 +296,7 @@ describe('ResponseHighlightElement', () => {
     });
   });
 
-  describe('test toggle button in code viwer', () => {
+  describe('test toggle button in code viewer', () => {
     beforeEach(() => {
       // @ts-ignore
       Prism.plugins.matchBraces.resetIndex();
