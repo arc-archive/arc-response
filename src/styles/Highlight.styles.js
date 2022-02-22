@@ -61,6 +61,7 @@ pre {
 }
 
 .toggle-target {
+  all: unset;
   position: absolute;
   width: 12px;
   height: 12px;
@@ -71,6 +72,11 @@ pre {
   justify-content: center;
   cursor: pointer;
   margin-top: 0.2rem;
+}
+
+.toggle-target:focus {
+  border: 1px solid rgb(0 95 204);
+  box-shadow: 0px 0px 1px 0px rgb(0 88 200 / 87%);
 }
 
 .toggle-target::before {

@@ -111,7 +111,7 @@ Prism.hooks.add('brace-complete', (env) => {
   }
   code.classList.add('toggle-padding');
   nodes.forEach((node) => {
-    const target = document.createElement('span');
+    const target = document.createElement('button');
     target.classList.add('toggle-target');
     target.classList.add('opened');
     target.title = 'Toggle visibility';
