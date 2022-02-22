@@ -1005,7 +1005,7 @@ export class ResponseViewElement extends LitElement {
       <arc-icon icon="contentCopy" slot="item-icon"></arc-icon> Copy to clipboard
     </anypoint-icon-item>
     <anypoint-icon-item data-id="har" ?compatibility="${this.compatibility}">
-      <arc-icon icon="save" slot="item-icon"></arc-icon>Save as HAR 1.2
+      <arc-icon icon="insertDriveFile" slot="item-icon"></arc-icon>Save as HAR 1.2
     </anypoint-icon-item>
     `;
   }
