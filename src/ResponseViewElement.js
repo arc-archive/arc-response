@@ -1017,7 +1017,7 @@ export class ResponseViewElement extends LitElement {
    * @returns {TemplateResult} Template for the response preview
    */
   [responseBodyTemplate](payload, headers='', opened) {
-    if ((this[responseValue] || {}).status === 0) {
+    if ((this[responseValue] || {}).status === 0 && !payload) {
       return html`
         <div class="response-error-title">The HTTP request couldn’t be made.</div>
         <div class="response-error-description">
