@@ -1017,6 +1017,16 @@ export class ResponseViewElement extends LitElement {
    * @returns {TemplateResult} Template for the response preview
    */
   [responseBodyTemplate](payload, headers='', opened) {
+    if ((this[responseValue] || {}).status === 0 && !payload) {
+      return html`
+        <div class="response-error-title">The HTTP request couldn’t be made.</div>
+        <div class="response-error-description">
+          Please check the URL and try again. If the issue persists,
+          <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS/Errors" target="_blank">CORS</a> may be blocking the request. Unfortunately,
+          we can't modify this behavior as the target server is a third-party server.
+        </div>
+      `;
+    }
     if (!payload) {
       return html`<p>The response contains no body.</p>`;
     }
