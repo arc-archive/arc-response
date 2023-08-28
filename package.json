@@ -104,5 +104,8 @@
     "*.js": [
       "eslint --fix"
     ]
+  },
+  "overrides": {
+    "playwright": "1.25.2"
   }
 }
